@@ -46,7 +46,7 @@ class Tensor {
   //   }
   //   const shape = this.shape.filter((_, i) => !axis.includes(i));
   //
-  //   if (this.shape.includes(0) && !this.shape.includes(0)) {
+  //   if (this.shape.includes(0) && !shape.includes(0)) {
   //     // TODO:
   //     return;
   //   }
