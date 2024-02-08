@@ -110,6 +110,8 @@ class Add extends Fn {
     return x.add(y);
   }
   backward(grad_output: nj.NdArray) {
+    // o = x + y 
+    // dx/do = 1 -> multiply by grad_output to represent dx/dL
     return [
       this.needs_input_grad[0] ? grad_output : undefined,
       this.needs_input_grad[1] ? grad_output : undefined,
@@ -122,6 +124,8 @@ class Sub extends Fn {
     return x.subtract(y);
   }
   backward(grad_output: nj.NdArray) {
+    // o = x - y = x - 1y
+    // dy/do = -1
     return [
       this.needs_input_grad[0] ? grad_output : undefined,
       this.needs_input_grad[1] ? grad_output.negative() : undefined,
@@ -140,6 +144,8 @@ class Mul extends Fn {
   }
 
   backward(grad_output: nj.NdArray) {
+    // o = x * y
+    // dx/do = y -> treat y as constant (partial derivative)
     return [
       this.needs_input_grad[0] ? this.y.multiply(grad_output) : undefined,
       this.needs_input_grad[1] ? this.x.multiply(grad_output) : undefined,
