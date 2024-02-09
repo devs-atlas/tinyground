@@ -1,16 +1,15 @@
-import nj from "@d4c/numjs";
+import { NdArray as NdA, default as nj } from "@d4c/numjs";
 
-type Kwargs = {};
-
+// TODO: ask nic why is this called tensor
 class Tensor {
   grad?: Tensor;
-  data: nj.NdArray;
+  data: NdA;
   shape: number[];
   requires_grad: boolean;
   context?: Fn;
 
-  constructor(data: number | nj.NdArray, requires_grad: boolean) {
-    if (data instanceof nj.NdArray) {
+  constructor(data: number | NdA, requires_grad: boolean) {
+    if (data instanceof NdA) {
       this.data = data;
       this.shape = data.shape;
     } else {
@@ -32,28 +31,32 @@ class Tensor {
     return Mul.run_op([this, tensor]);
   }
 
-  // reduce(fn: Fn, axis?: number | number[], keepdim = false): Tensor {
-  //   if (axis === undefined) {
-  //     axis = Array.from(Array(this.shape.length).keys());
-  //   } else if (typeof axis === "number") {
-  //     axis = [axis];
-  //   }
-  //
-  //   for (let i = 0; i < axis.length; ++i) {
-  //     if (axis[i] < 0) {
-  //       axis[i] += this.shape.length;
-  //     }
-  //   }
-  //   const shape = this.shape.filter((_, i) => !axis.includes(i));
-  //
-  //   if (this.shape.includes(0) && !shape.includes(0)) {
-  //     // TODO:
-  //     return;
-  //   }
-  //
-  //   const new_shape = this.shape.filter((s, i) => (axis.includes(i) ? 1 : s));
-  //   const tensor = fn.run_op([this], { new_shape });
-  // }
+  reduce(fn: Fn, axis?: number | number[], keepdim = false): Tensor {
+    let axis_: number[];
+
+    if (axis === undefined) {
+      axis_ = Array.from(Array(this.shape.length).keys());
+    } else if (typeof axis === "number") {
+      axis_ = [axis];
+    } else {
+      axis_ = axis;
+    }
+
+    for (let i = 0; i < axis_.length; ++i) {
+      if (axis_[i] < 0) {
+        axis_[i] += this.shape.length;
+      }
+    }
+    const shape = this.shape.filter((_, i) => !axis_.includes(i));
+
+    if (this.shape.includes(0) && !shape.includes(0)) {
+      // TODO:
+      return;
+    }
+
+    const new_shape = this.shape.filter((s, i) => (axis_.includes(i) ? 1 : s));
+    const tensor = fn.run_op([this], { new_shape });
+  }
 
   toString() {
     let repr = `Data: ${this.data}`;
@@ -77,19 +80,19 @@ class Fn {
     }
   }
 
-  backward(grad_output: nj.NdArray): (nj.NdArray | undefined)[] {
+  backward(grad_output: NdA): (NdA | undefined)[] | NdA {
     throw new Error(
       `NotImplemented: backward not implemented for type ${typeof this}`
     );
   }
 
-  forward(args: nj.NdArray[], kwargs?: Kwargs): nj.NdArray {
+  forward(args: NdA[], options?: {}): NdA {
     throw new Error(
       `NotImplemented: forward not implemented for type ${typeof this}`
     );
   }
 
-  static run_op(tensors: Tensor[], options: Kwargs = {}): Tensor {
+  static run_op(tensors: Tensor[], options = {}): Tensor {
     const context = new this(tensors);
     const tensor = new Tensor(
       context.forward(
@@ -106,11 +109,11 @@ class Fn {
 }
 
 class Add extends Fn {
-  forward([x, y]: nj.NdArray[]) {
+  forward([x, y]: NdA[]) {
     return x.add(y);
   }
-  backward(grad_output: nj.NdArray) {
-    // o = x + y 
+  backward(grad_output: NdA) {
+    // o = x + y
     // dx/do = 1 -> multiply by grad_output to represent dx/dL
     return [
       this.needs_input_grad[0] ? grad_output : undefined,
@@ -120,10 +123,10 @@ class Add extends Fn {
 }
 
 class Sub extends Fn {
-  forward([x, y]: nj.NdArray[]) {
+  forward([x, y]: NdA[]) {
     return x.subtract(y);
   }
-  backward(grad_output: nj.NdArray) {
+  backward(grad_output: NdA) {
     // o = x - y = x - 1y
     // dy/do = -1
     return [
@@ -134,22 +137,44 @@ class Sub extends Fn {
 }
 
 class Mul extends Fn {
-  x!: nj.NdArray;
-  y!: nj.NdArray;
+  x!: NdA;
+  y!: NdA;
 
-  forward([x, y]: nj.NdArray[]) {
+  forward([x, y]: NdA[]) {
     this.x = x;
     this.y = y;
     return x.multiply(y);
   }
 
-  backward(grad_output: nj.NdArray) {
+  backward(grad_output: NdA) {
     // o = x * y
     // dx/do = y -> treat y as constant (partial derivative)
     return [
       this.needs_input_grad[0] ? this.y.multiply(grad_output) : undefined,
       this.needs_input_grad[1] ? this.x.multiply(grad_output) : undefined,
     ];
+  }
+}
+
+class Reshape extends Fn {
+  input_shape!: number[];
+
+  forward([x]: NdA[], { shape }: Kwargs) {
+    this.input_shape = shape!;
+    return x.reshape(...this.input_shape);
+  }
+
+  backward(grad_output: NdA) {
+    let out = grad_output.reshape(this.input_shape);
+    return out;
+  }
+}
+
+class Expand extends Fn {
+  input_shape!: number[];
+  forward([x]: NdA[], { shape }: { shape: number[] }) {
+    this.input_shape = shape!;
+    return x;
   }
 }
 
