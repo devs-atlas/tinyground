@@ -14,10 +14,16 @@ function broadcast_to(t: NdA, shape: number[]) {
       throw Error("Mismatched broadcast dimensions");
   }
 
-  const ans = t;
+  let ans = t;
 
   for (let i = out_shape.length - 1; i > -1; --i) {
-    let times = out_shape[i] - shape[i];
+    let times = Math.abs(out_shape[i] - shape[i]);
+    if(times > 0){
+        let stackedArray = Array.from({length: times+1}, () => ans);
+        ans = nj.stack(stackedArray, i);
+        let new_shape = ans.shape.filter((dim, idx) =>  idx != i+1)
+        ans = ans.reshape(new_shape)
+    }
   }
 
   return ans;
@@ -25,7 +31,6 @@ function broadcast_to(t: NdA, shape: number[]) {
 
 //3x1x2 -> 3x3x2
 
-const a = nj.random([3, 1, 2]);
-const b: nj.NdArray = nj.stack([a, a], 1)
-console.log(a.shape)
-console.log(b.shape)
+const a = nj.random([2,1,2]);
+console.log(a)
+console.log(broadcast_to(a, [2,2,2]));

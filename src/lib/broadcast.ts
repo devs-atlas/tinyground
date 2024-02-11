@@ -18,10 +18,6 @@ function broadcast_to(t: NdA, shape: number[]) {
 
   for (let i = out_shape.length - 1; i > -1; --i) {
     let times = out_shape[i] - shape[i];
-    while (times--) {
-      // ans.set(...out_shape.slice([-i]), t.slice(...out_shape.slice([-i])));
-      ans.concat_along_axis(i, ans)
-    }
   }
 
   return ans;
