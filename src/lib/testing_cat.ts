@@ -32,6 +32,9 @@ function broadcast_to(t: NdA, shape: number[]) {
   return ans;
 }
 
+function sum_along_axis(t: NdA, axis: number){
+  return;
+}
 // how to sum along axis when you only have access to full-array-sum
 // [2,3,4]
 function sum(t: NdA, axis?: number | number[]) {
@@ -40,13 +43,17 @@ function sum(t: NdA, axis?: number | number[]) {
   }
   //do op if number
   if (typeof axis == "number"){
-    return;
+    return sum_along_axis(t, axis);
   } 
+
+  let ans : NdA = t;
   //do op if number[]
   for (let i = t.shape.length - 1; i > -1; --i) {
-    // sum_along_axis()
+    if(axis.includes(i)){
+      ans = sum_along_axis(ans, i);
+    }
   }
 }
 
 let a = nj.ones([2,3,4])
-console.log(broadcast_to(a, [2,2,3,4]));
+console.log(broadcast_to(a, [5,2,3,4]).shape);

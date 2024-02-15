@@ -23,3 +23,5 @@ function broadcast_to(t: NdA, shape: number[]) {
   return ans;
 }
 
+// [2,3,5]
+// [2,3,4,5]
