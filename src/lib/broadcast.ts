@@ -23,23 +23,3 @@ function broadcast_to(t: NdA, shape: number[]) {
   return ans;
 }
 
-// 2x1x3 -> 2x4x3
-
-const a = nj.random([3]);
-
-console.log(`Before reshape: ${a}`);
-
-// const b = broadcastTo(a, [3, 3])
-
-console.log(`broadcast: ${nj.broadcast([5, 1, 3, 4], [5, 3, 3, 4])}`);
-
-const original_shape = [1, 3, 4];
-const from = nj
-  .arange(original_shape.reduce((p, n) => p * n, 1))
-  .reshape(...original_shape);
-console.log(`before: ${from}`);
-const new_shape = [4, 4, 4];
-// console.log(broadcast_to(from, new_shape));
-// console.log(`${broadcast_to(nj.array([1, 4, 4]), [2, 4, 1])}`);
-
-// console.log(`After reshape: ${b}`);

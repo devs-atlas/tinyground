@@ -19,9 +19,11 @@ class Tensor {
     this.requires_grad = requires_grad;
   }
 
+
   add(tensor: Tensor) {
     return Add.run_op([this, tensor]);
   }
+
 
   sub(tensor: Tensor) {
     return Sub.run_op([this, tensor]);
@@ -58,6 +60,18 @@ class Tensor {
     const tensor = fn.run_op([this], { new_shape });
   }
 
+  // prob shouldnt be static
+  static _sum_along_axis(tensor: Tensor, axis?: number | number[]) :  Tensor {
+    shape = tensor.shape
+
+    // dont do the call like this fr
+    if !axis:
+      return tensor.data.sum()
+
+    for(let i=0; i < )
+  }
+    
+
   toString() {
     let repr = `Data: ${this.data}`;
     if (this.requires_grad) {
@@ -66,6 +80,7 @@ class Tensor {
     return repr;
   }
 }
+
 
 class Fn {
   needs_input_grad: boolean[];
@@ -105,6 +120,17 @@ class Fn {
       tensor.context = context;
     }
     return tensor;
+  }
+}
+
+class Expand extends Fn {
+  input_shape: Nda;
+  forward([x]: NdA[], new_shape) {
+    this.input_shape = x.shape;
+    return broadcast_to(x, new_shape);
+  }
+  backward( grad_output: NdA ) {
+    return grad_output.sum()
   }
 }
 
@@ -207,11 +233,6 @@ function testTensors() {
 
   const t3 = t1.add(t);
   const t4 = t1.sub(t);
-  // console.log("added:");
-  // console.log(t3);
-  // console.log("subbed:");
-  // console.log(t4);
-
   console.log(t1.mul(t));
 }
 
