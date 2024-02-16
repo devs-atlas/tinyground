@@ -1,7 +1,6 @@
 import { NdArray as NdA, default as nj } from "@d4c/numjs";
 
-// TODO: ask nic why is this called tensor
-class Tensor {
+export class Tensor {
   grad?: Tensor;
   data: NdA;
   shape: number[];
@@ -19,11 +18,9 @@ class Tensor {
     this.requires_grad = requires_grad;
   }
 
-
   add(tensor: Tensor) {
     return Add.run_op([this, tensor]);
   }
-
 
   sub(tensor: Tensor) {
     return Sub.run_op([this, tensor]);
@@ -33,44 +30,43 @@ class Tensor {
     return Mul.run_op([this, tensor]);
   }
 
-  reduce(fn: Fn, axis?: number | number[], keepdim = false): Tensor {
-    let axis_: number[];
-
-    if (axis === undefined) {
-      axis_ = Array.from(Array(this.shape.length).keys());
-    } else if (typeof axis === "number") {
-      axis_ = [axis];
-    } else {
-      axis_ = axis;
-    }
-
-    for (let i = 0; i < axis_.length; ++i) {
-      if (axis_[i] < 0) {
-        axis_[i] += this.shape.length;
-      }
-    }
-    const shape = this.shape.filter((_, i) => !axis_.includes(i));
-
-    if (this.shape.includes(0) && !shape.includes(0)) {
-      // TODO:
-      return;
-    }
-
-    const new_shape = this.shape.filter((s, i) => (axis_.includes(i) ? 1 : s));
-    const tensor = fn.run_op([this], { new_shape });
-  }
+  // reduce(fn: Fn, axis?: number | number[], keepdim = false): Tensor {
+  //   let axis_: number[];
+  //
+  //   if (axis === undefined) {
+  //     axis_ = Array.from(Array(this.shape.length).keys());
+  //   } else if (typeof axis === "number") {
+  //     axis_ = [axis];
+  //   } else {
+  //     axis_ = axis;
+  //   }
+  //
+  //   for (let i = 0; i < axis_.length; ++i) {
+  //     if (axis_[i] < 0) {
+  //       axis_[i] += this.shape.length;
+  //     }
+  //   }
+  //   const shape = this.shape.filter((_, i) => !axis_.includes(i));
+  //
+  //   if (this.shape.includes(0) && !shape.includes(0)) {
+  //     // TODO:
+  //     return;
+  //   }
+  //
+  //   const new_shape = this.shape.filter((s, i) => (axis_.includes(i) ? 1 : s));
+  //   const tensor = Fn.run_op([this], { new_shape });
+  // }
 
   // prob shouldnt be static
-  static _sum_along_axis(tensor: Tensor, axis?: number | number[]) :  Tensor {
-    shape = tensor.shape
-
-    // dont do the call like this fr
-    if !axis:
-      return tensor.data.sum()
-
-    for(let i=0; i < )
-  }
-    
+  // static _sum_along_axis(tensor: Tensor, axis?: number | number[]) :  Tensor {
+  //   shape = tensor.shape
+  //
+  //   // dont do the call like this fr
+  //   if !axis:
+  //     return tensor.data.sum()
+  //
+  //   for(let i=0; i < )
+  // }
 
   toString() {
     let repr = `Data: ${this.data}`;
@@ -80,7 +76,6 @@ class Tensor {
     return repr;
   }
 }
-
 
 class Fn {
   needs_input_grad: boolean[];
@@ -95,17 +90,8 @@ class Fn {
     }
   }
 
-  backward(grad_output: NdA): (NdA | undefined)[] | NdA {
-    throw new Error(
-      `NotImplemented: backward not implemented for type ${typeof this}`
-    );
-  }
-
-  forward(args: NdA[], options?: {}): NdA {
-    throw new Error(
-      `NotImplemented: forward not implemented for type ${typeof this}`
-    );
-  }
+  forward(_: any, ...__: any): any {}
+  backward(_: any, ...__: any): any {}
 
   static run_op(tensors: Tensor[], options = {}): Tensor {
     const context = new this(tensors);
@@ -123,16 +109,16 @@ class Fn {
   }
 }
 
-class Expand extends Fn {
-  input_shape: Nda;
-  forward([x]: NdA[], new_shape) {
-    this.input_shape = x.shape;
-    return broadcast_to(x, new_shape);
-  }
-  backward( grad_output: NdA ) {
-    return grad_output.sum()
-  }
-}
+// class Expand extends Fn {
+//   input_shape: Nda;
+//   forward([x]: NdA[], new_shape) {
+//     this.input_shape = x.shape;
+//     return broadcast_to(x, new_shape);
+//   }
+//   backward( grad_output: NdA ) {
+//     return grad_output.sum()
+//   }
+// }
 
 class Add extends Fn {
   forward([x, y]: NdA[]) {
@@ -185,7 +171,7 @@ class Mul extends Fn {
 class Reshape extends Fn {
   input_shape!: number[];
 
-  forward([x]: NdA[], { shape }: Kwargs) {
+  forward([x]: NdA[], { shape }: { shape: number[] }) {
     this.input_shape = shape!;
     return x.reshape(...this.input_shape);
   }
@@ -207,37 +193,3 @@ class Expand extends Fn {
 // class Sum extends Fn {
 //   forward(tensor: Tensor, )
 // }
-
-function testTensors() {
-  let t = new Tensor(nj.array([1, 2, 3, 4, 5]), true);
-
-  console.log(t.toString());
-
-  t = new Tensor(
-    nj.array([
-      [1, 2],
-      [3, 4],
-      [5, 7],
-    ]),
-    false
-  );
-
-  let t1 = new Tensor(
-    nj.array([
-      [1, 2],
-      [3, 4],
-      [5, 6],
-    ]),
-    true
-  );
-
-  const t3 = t1.add(t);
-  const t4 = t1.sub(t);
-  console.log(t1.mul(t));
-}
-
-function main() {
-  testTensors();
-}
-
-main();
