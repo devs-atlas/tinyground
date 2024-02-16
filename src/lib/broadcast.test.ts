@@ -2,10 +2,8 @@ import { default as nj } from "@d4c/numjs";
 import { Tensor } from "./teeny";
 
 expect.extend({
-  toEqualData(received: Tensor, expected: Tensor) {
-    const pass =
-      JSON.stringify(received.data.tolist()) ===
-      JSON.stringify(expected.data.tolist());
+  toEqual(received: Tensor, expected: Tensor) {
+    const pass = received.data.toJSON() === expected.data.toJSON();
     if (pass) {
       return {
         message: () => `expected tensors not to be equal`,
@@ -50,6 +48,6 @@ describe("nick is erect", () => {
       false
     );
 
-    expect(result).toEqualData(expected);
+    expect(result).toEqual(expected);
   });
 });
