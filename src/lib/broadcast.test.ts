@@ -1,14 +1,6 @@
 import { default as nj } from "@d4c/numjs";
 import { Tensor } from "./teeny";
 
-declare global {
-  namespace jest {
-    interface Matchers<R> {
-      toEqualData(expected: Tensor): R;
-    }
-  }
-}
-
 expect.extend({
   toEqualData(received: Tensor, expected: Tensor) {
     const pass =
