@@ -18,8 +18,8 @@ expect.extend({
   },
 });
 
-describe("nick is erect", () => {
-  test("should cover him", () => {
+describe("Basic Tensor Ops", () => {
+  test("add", () => {
     let t1 = new Tensor(
       nj.array([
         [1, 2],
