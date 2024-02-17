@@ -57,16 +57,15 @@ function sum(t: NdA, axis?: number | number[]) {
   if (axis === undefined) {
     return nj.array(t.sum());
   }
-  if (typeof axis === "number"){
-    return sum_along_axis(t, axis)
+  if (typeof axis === "number") {
+    return sum_along_axis(t, axis);
   }
   let ans = t;
-  for(let i=0; i < t.shape.length; i++){
-    if(axis.includes(i)){
-      ans = sum_along_axis(ans, i); 
-    }      
+  for (let i = 0; i < t.shape.length; i++) {
+    if (axis.includes(i)) {
+      ans = sum_along_axis(ans, i);
+    }
   }
 
   return ans;
 }
-
