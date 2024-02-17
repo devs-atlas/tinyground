@@ -24,7 +24,7 @@ function broadcast_to(t: NdA, shape: number[]) {
   for (let i = out_shape.length - 1; i > -1; --i) {
     let times = Math.abs(out_shape[i] - shape[i]);
     if (times > 0) {
-      let stackedArray = Array.from({ length: times + 1 }, () => ans);
+      let stackedArray = Array(times + 1).fill(ans);
       ans = nj.stack(stackedArray, i);
     }
   }
@@ -69,3 +69,5 @@ function sum(t: NdA, axis?: number | number[]) {
 
   return ans;
 }
+
+function maximum(x: NdA, y: NdA) {}

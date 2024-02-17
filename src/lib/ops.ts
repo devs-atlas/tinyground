@@ -40,7 +40,7 @@ export enum MovementOps {
 }
 
 export enum LoadOps {
-  // EMPTY,
+  EMPTY,
   RAND,
   CONST,
   FROM,
@@ -48,3 +48,10 @@ export enum LoadOps {
   CUSTOM,
 }
 
+export type Op =
+  | UnaryOps
+  | BinaryOps
+  | ReduceOps
+  | TernaryOps
+  | MovementOps
+  | LoadOps;
