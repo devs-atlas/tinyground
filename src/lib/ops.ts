@@ -1,53 +1,53 @@
-// operations.ts
-export enum UnaryOps {
-  NOOP,
-  EXP2,
-  LOG2,
-  CAST,
-  SIN,
-  SQRT,
-  RECIP,
-  NEG,
-}
+// UnaryOps converted to type
+export type UnaryOps =
+  | 'NOOP'
+  | 'EXP2'
+  | 'LOG2'
+  | 'CAST'
+  | 'SIN'
+  | 'SQRT'
+  | 'RECIP'
+  | 'NEG';
 
-export enum BinaryOps {
-  ADD,
-  SUB,
-  MUL,
-  DIV,
-  MAX,
-  MOD,
-  CMPLT,
-}
+// BinaryOps converted to type
+export type BinaryOps =
+  | 'ADD'
+  | 'SUB'
+  | 'MUL'
+  | 'DIV'
+  | 'MAX'
+  | 'MOD'
+  | 'CMPLT';
 
-export enum ReduceOps {
-  SUM,
-  MAX,
-}
+// ReduceOps converted to type
+export type ReduceOps =
+  | 'SUM'
+  | 'MAX';
 
-export enum TernaryOps {
-  MULACC,
-  WHERE,
-}
+// TernaryOps converted to type
+export type TernaryOps =
+  | 'MULACC'
+  | 'WHERE';
 
-export enum MovementOps {
-  RESHAPE,
-  PERMUTE,
-  EXPAND,
-  PAD,
-  SHRINK,
-  STRIDE,
-}
+// MovementOps converted to type
+export type MovementOps =
+  | 'RESHAPE'
+  | 'PERMUTE'
+  | 'EXPAND'
+  | 'PAD'
+  | 'SHRINK'
+  | 'STRIDE';
 
-export enum LoadOps {
-  EMPTY,
-  RAND,
-  CONST,
-  FROM,
-  CONTIGUOUS,
-  CUSTOM,
-}
+// LoadOps converted to type
+export type LoadOps =
+  | 'EMPTY'
+  | 'RAND'
+  | 'CONST'
+  | 'FROM'
+  | 'CONTIGUOUS'
+  | 'CUSTOM';
 
+// Op converted to type
 export type Op =
   | UnaryOps
   | BinaryOps
@@ -55,3 +55,4 @@ export type Op =
   | TernaryOps
   | MovementOps
   | LoadOps;
+
