@@ -1,7 +1,17 @@
 import { NdArray as NdA, default as nj } from "@d4c/numjs";
-import ndarray from "ndarray";
 import ops from "ndarray-ops";
-import { BinaryOps, LoadOps, TernaryOps, UnaryOps } from "./ops";
+import { LoadOps } from "./ops";
+
+NdA.prototype.emax = function (x, copy = true) {
+  if (arguments.length === 1) {
+    copy = true;
+  }
+  const arr = copy ? this.clone() : this;
+  // @ts-ignore
+  x = NdA.new(x, this.dtype);
+  ops.maxeq(arr.selection, x.selection);
+  return arr;
+};
 
 class LazyBuffer {
   data: NdA;
