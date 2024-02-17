@@ -1,10 +1,17 @@
 import { NdArray as NdA, default as nj } from "@d4c/numjs";
 import ops from "ndarray-ops";
-import { LoadOps, BinaryOps, UnaryOps, TernaryOps, MovementOps } from "./ops";
+import {
+  LoadOps,
+  ReduceOps,
+  BinaryOps,
+  UnaryOps,
+  TernaryOps,
+  MovementOps,
+} from "./ops";
 
 //TODO: add type to declaration file
 // @ts-ignore
-NdA.prototype.emax = function (x, copy = true) {
+NdA.prototype.emax = function(x, copy = true) {
   if (arguments.length === 1) {
     copy = true;
   }
@@ -16,7 +23,7 @@ NdA.prototype.emax = function (x, copy = true) {
 };
 
 // @ts-ignore
-NdA.prototype.lteq = function (x, copy = true) {
+NdA.prototype.lteq = function(x, copy = true) {
   if (arguments.length === 1) {
     copy = true;
   }
@@ -96,6 +103,29 @@ class LazyBuffer {
     }
     return new LazyBuffer(out);
   }
+
+  // r(op: ReduceOps, new_shape: number[]): LazyBuffer {
+  //   const DEBUG = 1; // Assuming a DEBUG constant; adjust its scope as needed
+  //   if (DEBUG >= 1) console.log(op, this, new_shape);
+  //   if (this.shape.length !== new_shape.length) {
+  //     throw new Error("reduce shapes must have the same dimensions");
+  //   }
+  //   const axis: number[] = this.shape
+  //     .map((s, i) => (s !== new_shape[i] ? i : -1))
+  //     .filter((i) => i !== -1);
+  //
+  //   switch (op) {
+  //     case "SUM":
+  //       return new LazyBuffer(nj.sum(this.data, axis, false));
+  //     case "MAX":
+  //       // Since nj does not directly support reduce max with axis, use custom logic or consider extending nj or using a different library
+  //       throw new Error(
+  //         "ReduceOps.MAX is not directly supported, needs custom implementation",
+  //       );
+  //     default:
+  //       throw new Error(`NotImplementedError: ${op}`);
+  //   }
+  // }
 
 }
 
