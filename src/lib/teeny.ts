@@ -1,5 +1,70 @@
 import { NdArray as NdA, default as nj } from "@d4c/numjs";
 
+function broadcast_to(t: NdA, shape: number[]) {
+  if (t.shape.length > shape.length) {
+    throw Error(`Cannot broadcast shape ${t.shape} to smaller shape ${shape}.`);
+  }
+
+  let out_shape = Array(shape.length - t.shape.length)
+    .fill(1)
+    .concat(t.shape);
+
+  for (let i = t.shape.length - 1; i > -1; --i) {
+    if (out_shape[i] !== shape[i] && out_shape[i] !== 1)
+      throw Error("Mismatched broadcast dimensions");
+  }
+
+  let ans = t;
+
+  for (let i = out_shape.length - 1; i > -1; --i) {
+    let times = Math.abs(out_shape[i] - shape[i]);
+    if (times > 0) {
+      let stackedArray = Array.from({ length: times + 1 }, () => ans);
+      ans = nj.stack(stackedArray, i);
+    }
+  }
+
+  return ans;
+}
+
+function sum_along_axis(t: NdA, axis: number): NdA {
+  let slices = Array(t.shape[axis])
+    .fill(null)
+    .map((_, i) => {
+      return t.shape.map((dim, j) => {
+        if (j === axis) {
+          return [i, i + 1];
+        }
+        return [0, dim];
+      });
+    });
+
+  let ans = nj.zeros(t.slice(...slices[0]).shape);
+
+  for (let slice of slices) {
+    ans.add(t.slice(...slice), false);
+  }
+
+  return ans;
+}
+
+function sum(t: NdA, axis?: number | number[]) {
+  if (axis === undefined) {
+    return nj.array(t.sum());
+  }
+  if (typeof axis === "number") {
+    return sum_along_axis(t, axis);
+  }
+  let ans = t;
+  for (let i = 0; i < t.shape.length; i++) {
+    if (axis.includes(i)) {
+      ans = sum_along_axis(ans, i);
+    }
+  }
+
+  return ans;
+}
+
 export class Tensor {
   grad?: Tensor;
   data: NdA;
@@ -57,17 +122,6 @@ export class Tensor {
   //   const tensor = Fn.run_op([this], { new_shape });
   // }
 
-  // prob shouldnt be static
-  // static _sum_along_axis(tensor: Tensor, axis?: number | number[]) :  Tensor {
-  //   shape = tensor.shape
-  //
-  //   // dont do the call like this fr
-  //   if !axis:
-  //     return tensor.data.sum()
-  //
-  //   for(let i=0; i < )
-  // }
-
   toString() {
     let repr = `Data: ${this.data}`;
     if (this.requires_grad) {
@@ -98,9 +152,9 @@ class Fn {
     const tensor = new Tensor(
       context.forward(
         tensors.map((t) => t.data),
-        options
+        options,
       ),
-      context.requires_grad
+      context.requires_grad,
     );
     if (context.requires_grad) {
       tensor.context = context;
@@ -109,16 +163,18 @@ class Fn {
   }
 }
 
-// class Expand extends Fn {
-//   input_shape: Nda;
-//   forward([x]: NdA[], new_shape) {
-//     this.input_shape = x.shape;
-//     return broadcast_to(x, new_shape);
-//   }
-//   backward( grad_output: NdA ) {
-//     return grad_output.sum()
-//   }
-// }
+class Expand extends Fn {
+  input_shape!: number[];
+
+  forward([x]: NdA[], { new_shape }: { new_shape: number[] }) {
+    this.input_shape = x.shape;
+    return broadcast_to(x, new_shape);
+  }
+  backward(grad_output: NdA) {
+    // fix this - need to pass axis to  
+    // return sum(grad_output, this.input_shape);
+  }
+}
 
 class Add extends Fn {
   forward([x, y]: NdA[]) {
@@ -182,14 +238,8 @@ class Reshape extends Fn {
   }
 }
 
-class Expand extends Fn {
-  input_shape!: number[];
-  forward([x]: NdA[], { shape }: { shape: number[] }) {
-    this.input_shape = shape!;
-    return x;
+class Sum extends Fn {
+  forward([x]: NdA[], { axis } : { axis?: number | number[] }){
+  
   }
 }
-
-// class Sum extends Fn {
-//   forward(tensor: Tensor, )
-// }
