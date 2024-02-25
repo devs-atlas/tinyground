@@ -9,7 +9,6 @@ import {
   MovementOps,
 } from "./ops";
 
-//TODO: add type to declaration file
 // @ts-ignore
 NdA.prototype.emax = function(x, copy = true) {
   if (arguments.length === 1) {
@@ -65,7 +64,7 @@ class LazyBuffer {
   e(op: UnaryOps | BinaryOps, ...srcs: LazyBuffer[]): LazyBuffer {
     let out = this.data;
     switch (op) {
-      case "NEG": // Use string literals directly
+      case "NEG":
         out = nj.negative(out);
         break;
       case "EXP2":
@@ -98,7 +97,7 @@ class LazyBuffer {
         break;
       case "CMPLT":
         // @ts-ignore
-        out = this.data.lteq(srcs[0].data);
+        out = this.data.lt(srcs[0].data).selection.data.map(Number);
         break;
     }
     return new LazyBuffer(out);
