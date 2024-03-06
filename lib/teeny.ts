@@ -1,6 +1,6 @@
 import { NdArray as NdA, default as nj } from "@d4c/numjs";
 
-function broadcast_to(t: NdA, shape: number[]) {
+export function broadcast_to(t: NdA, shape: number[]) {
   if (t.shape.length > shape.length) {
     throw Error(`Cannot broadcast shape ${t.shape} to smaller shape ${shape}.`);
   }
@@ -19,12 +19,12 @@ function broadcast_to(t: NdA, shape: number[]) {
   for (let i = out_shape.length - 1; i > -1; --i) {
     let times = Math.abs(out_shape[i] - shape[i]);
     if (times > 0) {
-      let stackedArray = Array.from({ length: times + 1 }, () => ans);
+      let stackedArray = Array(times + 1).fill(ans);
       ans = nj.stack(stackedArray, i);
     }
   }
 
-  return ans;
+  return shape.length === 1 ? ans.flatten() : ans;
 }
 
 function sum_along_axis(t: NdA, axis: number): NdA {
@@ -152,9 +152,9 @@ class Fn {
     const tensor = new Tensor(
       context.forward(
         tensors.map((t) => t.data),
-        options,
+        options
       ),
-      context.requires_grad,
+      context.requires_grad
     );
     if (context.requires_grad) {
       tensor.context = context;
@@ -171,7 +171,7 @@ class Expand extends Fn {
     return broadcast_to(x, new_shape);
   }
   backward(grad_output: NdA) {
-    // fix this - need to pass axis to  
+    // fix this - need to pass axis to
     // return sum(grad_output, this.input_shape);
   }
 }
@@ -239,7 +239,5 @@ class Reshape extends Fn {
 }
 
 class Sum extends Fn {
-  forward([x]: NdA[], { axis } : { axis?: number | number[] }){
-  
-  }
+  forward([x]: NdA[], { axis }: { axis?: number | number[] }) {}
 }
