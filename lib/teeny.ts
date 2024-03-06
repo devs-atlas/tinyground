@@ -1,83 +1,18 @@
-import { NdArray as NdA, default as nj } from "@d4c/numjs";
-
-export function broadcast_to(t: NdA, shape: number[]) {
-  if (t.shape.length > shape.length) {
-    throw Error(`Cannot broadcast shape ${t.shape} to smaller shape ${shape}.`);
-  }
-
-  let out_shape = Array(shape.length - t.shape.length)
-    .fill(1)
-    .concat(t.shape);
-
-  for (let i = t.shape.length - 1; i > -1; --i) {
-    if (out_shape[i] !== shape[i] && out_shape[i] !== 1)
-      throw Error("Mismatched broadcast dimensions");
-  }
-
-  let ans = t;
-
-  for (let i = out_shape.length - 1; i > -1; --i) {
-    let times = Math.abs(out_shape[i] - shape[i]);
-    if (times > 0) {
-      let stackedArray = Array(times + 1).fill(ans);
-      ans = nj.stack(stackedArray, i);
-    }
-  }
-
-  return shape.length === 1 ? ans.flatten() : ans;
-}
-
-function sum_along_axis(t: NdA, axis: number): NdA {
-  let slices = Array(t.shape[axis])
-    .fill(null)
-    .map((_, i) => {
-      return t.shape.map((dim, j) => {
-        if (j === axis) {
-          return [i, i + 1];
-        }
-        return [0, dim];
-      });
-    });
-
-  let ans = nj.zeros(t.slice(...slices[0]).shape);
-
-  for (let slice of slices) {
-    ans.add(t.slice(...slice), false);
-  }
-
-  return ans;
-}
-
-function sum(t: NdA, axis?: number | number[]) {
-  if (axis === undefined) {
-    return nj.array(t.sum());
-  }
-  if (typeof axis === "number") {
-    return sum_along_axis(t, axis);
-  }
-  let ans = t;
-  for (let i = 0; i < t.shape.length; i++) {
-    if (axis.includes(i)) {
-      ans = sum_along_axis(ans, i);
-    }
-  }
-
-  return ans;
-}
+import * as tf from "@tensorflow/tfjs";
 
 export class Tensor {
   grad?: Tensor;
-  data: NdA;
+  data: tf.Tensor;
   shape: number[];
   requires_grad: boolean;
   context?: Fn;
 
-  constructor(data: number | NdA, requires_grad: boolean) {
-    if (data instanceof NdA) {
+  constructor(data: number | tf.Tensor, requires_grad: boolean) {
+    if (data instanceof tf.Tensor) {
       this.data = data;
       this.shape = data.shape;
     } else {
-      this.data = nj.array([data]);
+      this.data = tf.tensor([data]);
       this.shape = [];
     }
     this.requires_grad = requires_grad;
@@ -148,6 +83,7 @@ class Fn {
   backward(_: any, ...__: any): any {}
 
   static run_op(tensors: Tensor[], options = {}): Tensor {
+    // TODO: can we just make this "Fn"?
     const context = new this(tensors);
     const tensor = new Tensor(
       context.forward(
@@ -166,21 +102,21 @@ class Fn {
 class Expand extends Fn {
   input_shape!: number[];
 
-  forward([x]: NdA[], { new_shape }: { new_shape: number[] }) {
+  forward([x]: tf.Tensor[], { new_shape }: { new_shape: number[] }) {
     this.input_shape = x.shape;
-    return broadcast_to(x, new_shape);
+    return x.broadcastTo(new_shape);
   }
-  backward(grad_output: NdA) {
+  backward(grad_output: tf.Tensor) {
     // fix this - need to pass axis to
     // return sum(grad_output, this.input_shape);
   }
 }
 
 class Add extends Fn {
-  forward([x, y]: NdA[]) {
+  forward([x, y]: tf.Tensor[]) {
     return x.add(y);
   }
-  backward(grad_output: NdA) {
+  backward(grad_output: tf.Tensor) {
     // o = x + y
     // dx/do = 1 -> multiply by grad_output to represent dx/dL
     return [
@@ -191,35 +127,35 @@ class Add extends Fn {
 }
 
 class Sub extends Fn {
-  forward([x, y]: NdA[]) {
-    return x.subtract(y);
+  forward([x, y]: tf.Tensor[]) {
+    return x.sub(y);
   }
-  backward(grad_output: NdA) {
+  backward(grad_output: tf.Tensor) {
     // o = x - y = x - 1y
     // dy/do = -1
     return [
       this.needs_input_grad[0] ? grad_output : undefined,
-      this.needs_input_grad[1] ? grad_output.negative() : undefined,
+      this.needs_input_grad[1] ? grad_output.neg() : undefined,
     ];
   }
 }
 
 class Mul extends Fn {
-  x!: NdA;
-  y!: NdA;
+  x!: tf.Tensor;
+  y!: tf.Tensor;
 
-  forward([x, y]: NdA[]) {
+  forward([x, y]: tf.Tensor[]) {
     this.x = x;
     this.y = y;
-    return x.multiply(y);
+    return x.mul(y);
   }
 
-  backward(grad_output: NdA) {
+  backward(grad_output: tf.Tensor) {
     // o = x * y
     // dx/do = y -> treat y as constant (partial derivative)
     return [
-      this.needs_input_grad[0] ? this.y.multiply(grad_output) : undefined,
-      this.needs_input_grad[1] ? this.x.multiply(grad_output) : undefined,
+      this.needs_input_grad[0] ? this.y.mul(grad_output) : undefined,
+      this.needs_input_grad[1] ? this.x.mul(grad_output) : undefined,
     ];
   }
 }
@@ -227,17 +163,17 @@ class Mul extends Fn {
 class Reshape extends Fn {
   input_shape!: number[];
 
-  forward([x]: NdA[], { shape }: { shape: number[] }) {
+  forward([x]: tf.Tensor[], { shape }: { shape: number[] }) {
     this.input_shape = shape!;
-    return x.reshape(...this.input_shape);
+    return x.reshape(this.input_shape);
   }
 
-  backward(grad_output: NdA) {
+  backward(grad_output: tf.Tensor) {
     let out = grad_output.reshape(this.input_shape);
     return out;
   }
 }
 
 class Sum extends Fn {
-  forward([x]: NdA[], { axis }: { axis?: number | number[] }) {}
+  forward([x]: tf.Tensor[], { axis }: { axis?: number | number[] }) {}
 }
