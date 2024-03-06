@@ -1,16 +1,10 @@
 import { NdArray as NdA, default as nj } from "@d4c/numjs";
 import ops from "ndarray-ops";
-import {
-  LoadOps,
-  ReduceOps,
-  BinaryOps,
-  UnaryOps,
-  TernaryOps,
-  MovementOps,
-} from "./ops";
+import { BinaryOps, LoadOps, UnaryOps } from "./ops";
+import { broadcast_to } from "./teeny";
 
 // @ts-ignore
-NdA.prototype.emax = function(x, copy = true) {
+NdA.prototype.emax = function (x, copy = true) {
   if (arguments.length === 1) {
     copy = true;
   }
@@ -22,7 +16,7 @@ NdA.prototype.emax = function(x, copy = true) {
 };
 
 // @ts-ignore
-NdA.prototype.lteq = function(x, copy = true) {
+NdA.prototype.lt = function (x, copy = true) {
   if (arguments.length === 1) {
     copy = true;
   }
@@ -92,10 +86,28 @@ class LazyBuffer {
         out = nj.divide(this.data, srcs[0].data);
         break;
       case "MAX":
+        if (this.shape !== srcs[0].shape) {
+          const thisSize = this.shape.reduce((acc, e) => acc * e, 1);
+          const srcsSize = srcs[0].shape.reduce((acc, e) => acc * e, 1);
+          if (thisSize > srcsSize) {
+            srcs[0].data = broadcast_to(srcs[0].data, this.shape);
+          } else if (thisSize < srcsSize) {
+            this.data = broadcast_to(this.data, srcs[0].shape);
+          }
+        }
         // @ts-ignore
         out = this.data.emax(srcs[0].data);
         break;
       case "CMPLT":
+        if (this.shape !== srcs[0].shape) {
+          const thisSize = this.shape.reduce((acc, e) => acc * e, 1);
+          const srcsSize = srcs[0].shape.reduce((acc, e) => acc * e, 1);
+          if (thisSize > srcsSize) {
+            srcs[0].data = broadcast_to(srcs[0].data, this.shape);
+          } else if (thisSize < srcsSize) {
+            this.data = broadcast_to(this.data, srcs[0].shape);
+          }
+        }
         // @ts-ignore
         out = this.data.lt(srcs[0].data).selection.data.map(Number);
         break;
