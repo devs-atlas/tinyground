@@ -10,10 +10,10 @@
     "test": "jest"
   },
   "dependencies": {
-    "@d4c/numjs": "^0.17.34",
     "@mdx-js/loader": "^3.0.1",
     "@mdx-js/react": "^3.0.1",
     "@next/mdx": "^14.1.0",
+    "@tensorflow/tfjs": "^4.17.0",
     "@types/mdx": "^2.0.11",
     "next": "14.1.0",
     "react": "^18",
@@ -21,7 +21,6 @@
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
-    "@types/ndarray-ops": "^1.2.7",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

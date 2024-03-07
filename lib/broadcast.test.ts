@@ -1,10 +1,12 @@
-import { default as nj } from "@d4c/numjs";
+import * as tf from "@tensorflow/tfjs";
 import { Tensor } from "./teeny";
 
 expect.extend({
   toEqual(received: Tensor, expected: Tensor) {
-    const pass = received.data.toJSON() === expected.data.toJSON();
-    if (pass) {
+    const equal = received.data.equal(expected.data).sum().dataSync()[0];
+    const size = received.data.shape.reduce((x, y) => (x *= y));
+
+    if (equal === size) {
       return {
         message: () => `expected tensors not to be equal`,
         pass: true,
@@ -21,7 +23,7 @@ expect.extend({
 describe("Basic Tensor Ops", () => {
   test("add", () => {
     let t1 = new Tensor(
-      nj.array([
+      tf.tensor([
         [1, 2],
         [3, 4],
         [5, 7],
@@ -30,7 +32,7 @@ describe("Basic Tensor Ops", () => {
     );
 
     let t2 = new Tensor(
-      nj.array([
+      tf.tensor([
         [1, 2],
         [3, 4],
         [5, 6],
@@ -40,7 +42,7 @@ describe("Basic Tensor Ops", () => {
 
     const result = t1.add(t2);
     const expected = new Tensor(
-      nj.array([
+      tf.tensor([
         [2, 4],
         [6, 8],
         [10, 13],

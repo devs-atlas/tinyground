@@ -1,4 +1,3 @@
-// UnaryOps converted to type
 export type UnaryOps =
   | 'NOOP'
   | 'EXP2'
@@ -9,7 +8,6 @@ export type UnaryOps =
   | 'RECIP'
   | 'NEG';
 
-// BinaryOps converted to type
 export type BinaryOps =
   | 'ADD'
   | 'SUB'
@@ -19,17 +17,14 @@ export type BinaryOps =
   | 'MOD'
   | 'CMPLT';
 
-// ReduceOps converted to type
 export type ReduceOps =
   | 'SUM'
   | 'MAX';
 
-// TernaryOps converted to type
 export type TernaryOps =
   | 'MULACC'
   | 'WHERE';
 
-// MovementOps converted to type
 export type MovementOps =
   | 'RESHAPE'
   | 'PERMUTE'
@@ -38,7 +33,6 @@ export type MovementOps =
   | 'SHRINK'
   | 'STRIDE';
 
-// LoadOps converted to type
 export type LoadOps =
   | 'EMPTY'
   | 'RAND'
