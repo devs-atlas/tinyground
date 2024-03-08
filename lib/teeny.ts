@@ -30,32 +30,15 @@ export class Tensor {
     return Mul.run_op([this, tensor]);
   }
 
-  // reduce(fn: Fn, axis?: number | number[], keepdim = false): Tensor {
-  //   let axis_: number[];
-  //
-  //   if (axis === undefined) {
-  //     axis_ = Array.from(Array(this.shape.length).keys());
-  //   } else if (typeof axis === "number") {
-  //     axis_ = [axis];
-  //   } else {
-  //     axis_ = axis;
-  //   }
-  //
-  //   for (let i = 0; i < axis_.length; ++i) {
-  //     if (axis_[i] < 0) {
-  //       axis_[i] += this.shape.length;
-  //     }
-  //   }
-  //   const shape = this.shape.filter((_, i) => !axis_.includes(i));
-  //
-  //   if (this.shape.includes(0) && !shape.includes(0)) {
-  //     // TODO:
-  //     return;
-  //   }
-  //
-  //   const new_shape = this.shape.filter((s, i) => (axis_.includes(i) ? 1 : s));
-  //   const tensor = Fn.run_op([this], { new_shape });
-  // }
+  _reduce(fxn: Fn, axis?: number[] | number, keepdim = false) { 
+    let axis_ = axis;
+    if(!axis_){
+      axis_ = Array.from({ length: this.shape.length }, (_, index) => index);
+    }
+    else if(typeof(axis_) === 'number'){
+      axis_ = [axis_];
+    }
+  }
 
   toString() {
     let repr = `Data: ${this.data}`;
@@ -79,8 +62,8 @@ class Fn {
     }
   }
 
-  forward(_: any, ...__: any): any {}
-  backward(_: any, ...__: any): any {}
+  forward(_: any, ...__: any): any { }
+  backward(_: any, ...__: any): any { }
 
   static run_op(tensors: Tensor[], options = {}): Tensor {
     // TODO: can we just make this "Fn"?
@@ -88,9 +71,9 @@ class Fn {
     const tensor = new Tensor(
       context.forward(
         tensors.map((t) => t.data),
-        options
+        options,
       ),
-      context.requires_grad
+      context.requires_grad,
     );
     if (context.requires_grad) {
       tensor.context = context;
@@ -175,5 +158,5 @@ class Reshape extends Fn {
 }
 
 class Sum extends Fn {
-  forward([x]: tf.Tensor[], { axis }: { axis?: number | number[] }) {}
+  forward([x]: tf.Tensor[], { axis }: { axis?: number | number[] }) { }
 }
