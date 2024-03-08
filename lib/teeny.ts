@@ -7,6 +7,12 @@ export class Tensor {
   requires_grad: boolean;
   context?: Fn;
 
+  // TODO: add kwargs for this - check og teeny
+  full(shape: number[], fill_value: number, requires_grad: boolean) {
+    // TODO: add expand
+    return new Tensor(fill_value, requires_grad = requires_grad).expand(shape)
+  }
+
   constructor(data: number | tf.Tensor, requires_grad: boolean) {
     if (data instanceof tf.Tensor) {
       this.data = data;
@@ -30,14 +36,23 @@ export class Tensor {
     return Mul.run_op([this, tensor]);
   }
 
-  _reduce(fxn: Fn, axis?: number[] | number, keepdim = false) { 
+
+  _reduce(fxn: Fn, axis?: number[] | number, keepdim = false) {
     let axis_ = axis;
-    if(!axis_){
+    if (!axis_) {
       axis_ = Array.from({ length: this.shape.length }, (_, index) => index);
     }
-    else if(typeof(axis_) === 'number'){
+    else if (typeof (axis_) === 'number') {
       axis_ = [axis_];
     }
+
+    const reducedShape = this.shape.filter((_, index) => !axis_.includes(index));
+
+    if (reducedShape.includes(0) && !this.shape.includes(0)) {
+      return Tensor.full(this.shape.map((s, _) => s == 0 ? 1 : 0)
+    }
+
+    const ret = fxn.run_op(this, { new_shape?: number[] | number })
   }
 
   toString() {
