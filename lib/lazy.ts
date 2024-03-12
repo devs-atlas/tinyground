@@ -2,7 +2,7 @@ import { BinaryOps, LoadOps, UnaryOps, ReduceOps } from "./ops";
 
 import * as tf from "@tensorflow/tfjs";
 
-class LazyBuffer {
+export default class LazyBuffer {
   data: tf.Tensor;
 
   constructor(buf: tf.Tensor) {
@@ -15,6 +15,18 @@ class LazyBuffer {
 
   get shape(): number[] {
     return this.data.shape;
+  }
+
+  get dtype(): string {
+    return this.data.dtype;
+  }
+
+  //TODO: why does teeny continuous have x argument here?
+  contiguous(): LazyBuffer {
+    return this;
+  }
+  const(fill_value: number): LazyBuffer {
+    return new LazyBuffer(tf.onesLike(this.shape).mul(fill_value));
   }
 
   static loadop(op: LoadOps, shape: number[], arg?: number): LazyBuffer {
@@ -68,6 +80,7 @@ class LazyBuffer {
         out = this.data.less(srcs[0].data);
         break;
     }
+    //TODO: check out TeenyGrad code for this - they use highest order type in self or srcs
     return new LazyBuffer(out);
   }
 
@@ -90,6 +103,12 @@ class LazyBuffer {
     } else {
       throw new Error("Reduce operation must be SUM or MAX");
     }
+  }
+
+  cast(dtype: string) {
+    //it doesn't let me use string for dtype
+    //@ts-ignore
+    return new LazyBuffer(this.data.cast(dtype));
   }
 
   // TODO: Allow for the fancy indexing of teenygrad - None, not specifying certain dims, just a number...
@@ -119,3 +138,10 @@ class LazyBuffer {
     return new LazyBuffer(this.data.stridedSlice(begin, end, strides));
   }
 }
+
+let data = tf.randomNormal([3, 3]).cast("int32");
+console.log(`data type: ${data.dtype}`);
+const a = new LazyBuffer(data);
+console.log(`data type: ${a.data.dtype}`);
+let b = a.cast("float32");
+console.log(`data type: ${b.data.dtype}`);
