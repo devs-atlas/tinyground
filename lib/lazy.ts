@@ -138,10 +138,3 @@ export default class LazyBuffer {
     return new LazyBuffer(this.data.stridedSlice(begin, end, strides));
   }
 }
-
-let data = tf.randomNormal([3, 3]).cast("int32");
-console.log(`data type: ${data.dtype}`);
-const a = new LazyBuffer(data);
-console.log(`data type: ${a.data.dtype}`);
-let b = a.cast("float32");
-console.log(`data type: ${b.data.dtype}`);
