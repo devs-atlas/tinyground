@@ -42,6 +42,10 @@ export class Tensor {
     return new Tensor(tf.zeros(shape).mul(fill_value), requires_grad);
   }
 
+  full_like(fill_value: number, dtype?: string) {
+    return Tensor.full(this.shape, fill_value, true)
+  }
+
   add(tensor: Tensor) {
     return mlops.Add.run_op([this, tensor]);
   }
@@ -86,8 +90,89 @@ export class Tensor {
 
   //TODO: do i need to restate the axis type here and _reduce? should only be needed on outward facing methods.
   sum(axis?: number | number[], keepdim = false) {
-    return this._reduce(mlops.Sum, axis, keepdim);
+    //TODO: is this a temporary fix - why can't I pass mlops.Sum in directly
+    return this._reduce(mlops.Sum as unknown as Fn, axis, keepdim);
   }
+  max(axis?: number | number[], keepdim = false) {
+    return this._reduce(mlops.Max as unknown as Fn, axis, keepdim);
+  }
+  min(axis?: number | number[], keepdim = false) {
+    return -this.neg().max((axis = axis), (keepdim = keepdim));
+  }
+
+  // mlops (unary)
+
+  neg() {
+    return mlops.Neg.run_op([this]);
+  }
+  contiguous() {
+    return mlops.Contiguous.run_op([this]);
+  }
+  contiguous_backward() {
+    return mlops.ContiguousBackward.run_op([this]);
+  }
+  log() {
+    return mlops.Log.run_op([this]);
+  }
+  // log2() {
+  //   return mlops.Log.run_op([this]).div();
+  // }
+
+  // broadcasted binary mlops
+
+  _broadcasted(y: Tensor | number, reverse: boolean = false) {
+    let x: Tensor = this;
+    if (!(y instanceof Tensor)) {
+      if (this.shape.includes(0)) {
+        return this, this.full_like(y);
+      }
+      //TODO: dtype here
+      y = new Tensor(y, false);
+    }
+
+    [x, y] = reverse ? [y, x] : [x, y];
+
+    let xshape = x.shape;
+    let yshape = y.shape;
+
+    if (xshape === yshape) {
+      return [x, y];
+    }
+
+    let shape_delta = xshape.length - yshape.length;
+    if (shape_delta > 0) {
+      const newShape = new Array(shape_delta).fill(1); // Create an array of `shape_delta` ones
+      y = y.reshape([...newShape, ...y.shape]); // Spread the new dimensions and original shape
+    } else if (shape_delta < 0) {
+      const newShape = new Array(shape_delta).fill(-1); // Create an array of `shape_delta` ones
+      x = x.reshape([...newShape, ...y.shape]); // Spread the new dimensions and original shape
+    }
+    xshape = x.shape;
+    //@ts-ignore
+    yshape = y.shape;
+    if (xshape == yshape) {
+      return [x, y];
+    }
+
+    //do this
+    let shape_ret = xshape.map((x, i) => Math.max(x, yshape[i]));
+
+    if (xshape !== shape_ret) {
+      x = x.expand(shape_ret);
+    }
+    if (yshape !== shape_ret) {
+      y = y.expand(shape_ret);
+    }
+    return [x, y];
+  }
+
+  // movement mlops
+
+  reshape(shape: number | number[]) {
+    shape =
+    return mlops.Reshape.run_op([this], { shape });
+  }
+
   toString() {
     let repr = `Data: ${this.data}`;
     if (this.requires_grad) {
@@ -110,8 +195,8 @@ export class Fn {
     }
   }
 
-  forward(_: any, ...__: any): any {}
-  backward(_: any, ...__: any): any {}
+  forward(_: any, ...__: any): any { }
+  backward(_: any, ...__: any): any { }
 
   static run_op(tensors: Tensor[], options = {}): Tensor {
     // TODO: can we just make this "Fn"?
@@ -129,13 +214,3 @@ export class Fn {
     return tensor;
   }
 }
-
-let a = Tensor.zeros([3, 8, 4], 3, true);
-a.data
-  .array()
-  .then((array) => {
-    console.log(array); // This will print the actual values once the Promise is resolved.
-  })
-  .catch((error) => {
-    console.error("An error occurred:", error);
-  });
