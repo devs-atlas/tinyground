@@ -26,7 +26,7 @@ export default class LazyBuffer {
     return this;
   }
   const(fill_value: number): LazyBuffer {
-    return new LazyBuffer(tf.onesLike(this.shape).mul(fill_value));
+    return new LazyBuffer(tf.ones(this.shape).mul(fill_value));
   }
 
   static loadop(op: LoadOps, shape: number[], arg?: number): LazyBuffer {
