@@ -7,14 +7,17 @@ type NDArray = number[] | NDArray[];
 import Fn from "./fn";
 import { ReduceOps } from "./ops";
 
-export class Tensor {
+export default class Tensor {
   grad?: Tensor;
   data: LazyBuffer;
   shape: number[];
   requires_grad: boolean;
   context?: Fn;
 
-  constructor(data: number | NDArray | tf.Tensor | LazyBuffer, requires_grad: boolean = false) {
+  constructor(
+    data: number | NDArray | tf.Tensor | LazyBuffer,
+    requires_grad: boolean = false,
+  ) {
     if (data instanceof tf.Tensor) {
       this.data = new LazyBuffer(data);
       this.shape = data.shape;
@@ -48,7 +51,7 @@ export class Tensor {
   }
 
   full_like(fill_value: number, dtype?: string) {
-    return Tensor.full(this.shape, fill_value, true)
+    return Tensor.full(this.shape, fill_value, true);
   }
 
   add(tensor: Tensor) {
@@ -81,16 +84,16 @@ export class Tensor {
         reducedShape = reducedShape.map((axis) => (axis ? axis : 1));
       }
       // TODO: fix that
-      const fillVal = op === 'SUM'  ? 0 : Infinity;
+      const fillVal = op === "SUM" ? 0 : Infinity;
       return Tensor.full(reducedShape, fillVal, this.requires_grad);
     }
 
-    const new_shape = this.shape.map((s, i) => axis_.includes(i) ? 1 : s)
+    const new_shape = this.shape.map((s, i) => (axis_.includes(i) ? 1 : s));
 
     let ret =
-      op === 'SUM'
-        ? mlops.Sum.run_op([this], {new_shape})
-        : mlops.Max.run_op([this], {new_shape});
+      op === "SUM"
+        ? mlops.Sum.run_op([this], { new_shape })
+        : mlops.Max.run_op([this], { new_shape });
 
     return keepdim ? ret : ret.reshape(reducedShape);
   }
@@ -98,7 +101,7 @@ export class Tensor {
   //TODO: do i need to restate the axis type here and _reduce? should only be needed on outward facing methods.
   sum(axis?: number | number[], keepdim = false) {
     // @ts-ignore
-    return this._reduce(mlops.Sum, axis, keepdim);
+    return this._reduce("SUM", axis, keepdim);
   }
   max(axis?: number | number[], keepdim = false) {
     // @ts-ignore
@@ -177,16 +180,15 @@ export class Tensor {
   // movement mlops
 
   reshape(shape: number | (number | null)[]) {
-    if (typeof shape === 'number')
-      shape = [shape];
+    if (typeof shape === "number") shape = [shape];
     if (shape.filter((e) => e === -1).length > 1)
-      throw new Error("At most one dimension of shape can be -1")
+      throw new Error("At most one dimension of shape can be -1");
 
     for (let i = 0; i < shape.length; ++i) {
       if (shape[i] === -1) {
         shape[i] = this.shape.reduce((a, b) => a * b, 1);
       } else if (shape[i] === null) {
-        shape[i] = this.shape[i]
+        shape[i] = this.shape[i];
       }
     }
     return mlops.Reshape.run_op([this], { shape });

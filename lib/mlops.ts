@@ -3,7 +3,7 @@ import LazyBuffer from "./lazy";
 import { argsort } from "./utils";
 
 export class Contiguous extends Fn {
-  forward(x: LazyBuffer) {
+  forward([x]: LazyBuffer[]) {
     return x.contiguous();
   }
   backward(grad_output: LazyBuffer) {
@@ -12,7 +12,7 @@ export class Contiguous extends Fn {
 }
 
 export class ContiguousBackward extends Fn {
-  forward(x: LazyBuffer) {
+  forward([x]: LazyBuffer[]) {
     return x;
   }
   backward(grad_output: LazyBuffer) {
@@ -24,7 +24,7 @@ export class Cast extends Fn {
   input_dtype!: string;
 
   //TODO: maybe add dtype type thing
-  forward(x: LazyBuffer, dtype: string) {
+  forward([x]: LazyBuffer[], { dtype }: { dtype: string }) {
     this.input_dtype = x.dtype;
     return x.cast(dtype);
   }
@@ -36,7 +36,7 @@ export class Cast extends Fn {
 // UNARY OPS
 
 export class Zero extends Fn {
-  forward(x: LazyBuffer) {
+  forward([x]: LazyBuffer[]) {
     return x.const(0);
   }
   backward(grad_output: LazyBuffer) {
@@ -45,7 +45,7 @@ export class Zero extends Fn {
 }
 
 export class Neg extends Fn {
-  forward(x: LazyBuffer) {
+  forward([x]: LazyBuffer[]) {
     return x.e("NEG");
   }
   backward(grad_output: LazyBuffer) {
@@ -55,7 +55,7 @@ export class Neg extends Fn {
 
 export class Sin extends Fn {
   x!: LazyBuffer;
-  forward(x: LazyBuffer) {
+  forward([x]: LazyBuffer[]) {
     this.x = x;
     return x.e("SIN");
   }
@@ -70,7 +70,7 @@ export class Sin extends Fn {
 
 export class Relu extends Fn {
   ret!: LazyBuffer;
-  forward(x: LazyBuffer) {
+  forward([x]: LazyBuffer[]) {
     this.ret = x.e("MAX", x.const(0));
   }
   backward(grad_output: LazyBuffer) {
@@ -80,7 +80,7 @@ export class Relu extends Fn {
 
 export class Log extends Fn {
   x!: LazyBuffer;
-  forward(x: LazyBuffer) {
+  forward([x]: LazyBuffer[]) {
     this.x = x;
     //TODO: is it dumb to do this - dividing and multiplying by log2 instead of just using default
     //TODO: is Math.log(2) == Math.LOG2E?
@@ -93,7 +93,7 @@ export class Log extends Fn {
 
 export class Exp extends Fn {
   ret!: LazyBuffer;
-  forward(x: LazyBuffer) {
+  forward([x]: LazyBuffer[]) {
     this.ret = x.e("MUL", x.const(1 / Math.log(2))).e("EXP2");
     return this.ret;
   }
@@ -104,7 +104,7 @@ export class Exp extends Fn {
 
 export class Sqrt extends Fn {
   ret!: LazyBuffer;
-  forward(x: LazyBuffer) {
+  forward([x]: LazyBuffer[]) {
     this.ret = x.e("SQRT");
     return this.ret;
   }
@@ -115,7 +115,7 @@ export class Sqrt extends Fn {
 
 export class Sigmoid extends Fn {
   ret!: LazyBuffer;
-  forward(x: LazyBuffer) {
+  forward([x]: LazyBuffer[]) {
     this.ret = x
       .const(1)
       .e("DIV", x.const(1).e("ADD", x.e("MUL", x.const(-1 / Math.log(2)))))
@@ -126,7 +126,7 @@ export class Sigmoid extends Fn {
 // BINARY OPS
 
 export class Less extends Fn {
-  forward(x: LazyBuffer, y: LazyBuffer) {
+  forward([x, y]: LazyBuffer[]) {
     return x.e("CMPLT", y);
   }
   backward(grad_output: LazyBuffer) {
@@ -149,7 +149,7 @@ export class Add extends Fn {
 }
 
 export class Sub extends Fn {
-  forward(x: LazyBuffer, y: LazyBuffer) {
+  forward([x, y]: LazyBuffer[]) {
     return x.e("SUB", y);
   }
   backward(grad_output: LazyBuffer) {
@@ -164,7 +164,7 @@ export class Mul extends Fn {
   x!: LazyBuffer;
   y!: LazyBuffer;
 
-  forward(x: LazyBuffer, y: LazyBuffer) {
+  forward([x, y]: LazyBuffer[]) {
     this.x = x;
     this.y = y;
     return x.e("MUL", y);
@@ -182,7 +182,7 @@ export class Div extends Fn {
   x!: LazyBuffer;
   y!: LazyBuffer;
 
-  forward(x: LazyBuffer, y: LazyBuffer) {
+  forward([x, y]: LazyBuffer[]) {
     this.x = x;
     this.y = y;
     return x.e("DIV", y);
@@ -227,7 +227,7 @@ export class Div extends Fn {
 
 export class Sum extends Fn {
   input_shape!: number[];
-  forward([x]: LazyBuffer[], { new_shape }: {new_shape: number[]}) {
+  forward([x]: LazyBuffer[], { new_shape }: { new_shape: number[] }) {
     this.input_shape = x.shape;
     return x.r("SUM", new_shape);
   }
@@ -239,7 +239,7 @@ export class Sum extends Fn {
 export class Max extends Fn {
   x!: LazyBuffer;
   ret!: LazyBuffer;
-  forward([x]: LazyBuffer[], { new_shape }: {new_shape: number[]}) {
+  forward([x]: LazyBuffer[], { new_shape }: { new_shape: number[] }) {
     this.x = x;
     this.ret = x.r("MAX", new_shape);
     return this.ret;
@@ -258,7 +258,7 @@ export class Max extends Fn {
 export class Expand extends Fn {
   input_shape!: number[];
 
-  forward(x: LazyBuffer, shape: number[]) {
+  forward([x]: LazyBuffer[], { shape }: { shape: number[] }) {
     this.input_shape = x.shape;
     return x.expand(shape);
   }
@@ -284,7 +284,7 @@ export class Reshape extends Fn {
 export class Permute extends Fn {
   input_order!: number[];
 
-  forward(x: LazyBuffer, order: number[]) {
+  forward([x]: LazyBuffer[], { order }: { order: number[] }) {
     this.input_order = order;
     return x.permute(order);
   }
@@ -298,7 +298,7 @@ export class Permute extends Fn {
 export class Pad extends Fn {
   narg!: Array<[number, number]>;
 
-  forward(x: LazyBuffer, arg: Array<[number, number]>) {
+  forward([x]: LazyBuffer[], { arg }: { arg: Array<[number, number]> }) {
     this.narg = arg.map((p, i) => [p[0], x.shape[i] + p[0]]);
     return x.pad(arg);
   }
@@ -311,7 +311,7 @@ export class Pad extends Fn {
 export class Shrink extends Fn {
   narg!: Array<[number, number]>;
 
-  forward(x: LazyBuffer, arg: Array<[number, number]>) {
+  forward([x]: LazyBuffer[], { arg }: { arg: Array<[number, number]> }) {
     this.narg = arg.map((p, i) => [p[0], x.shape[i] - p[1]]);
     return x.shrink(arg);
   }
@@ -325,7 +325,7 @@ export class Shrink extends Fn {
 export class Flip extends Fn {
   arg!: number[];
 
-  forward(x: LazyBuffer, axis: number[]) {
+  forward([x]: LazyBuffer[], { axis }: { axis: number[] }) {
     this.arg = x.shape.map((_, i) => (axis.includes(i) ? -1 : 1));
     return x.stride(this.arg);
   }

@@ -1,5 +1,5 @@
 import * as tf from "@tensorflow/tfjs";
-import { Tensor } from "../lib/tensor";
+import Tensor from "../lib/tensor";
 
 function close(x: tf.Tensor, y: tf.Tensor, epsilon = 0.001): boolean {
   const difference = x.sub(y).abs();
@@ -53,6 +53,6 @@ describe("Basic Tensor Ops", () => {
       [1, 2],
     ]);
 
-    expect(t1.sum()).toEqual(22);
+    expect(t1.sum()).toEqual([22]);
   });
 });

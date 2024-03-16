@@ -96,10 +96,7 @@ export default class LazyBuffer {
       }
     }
 
-    console.log(axes)
-    console.log(this.data.dataSync())
     if (op === "SUM") {
-      console.log('sum')
       return new LazyBuffer(tf.sum(this.data, axes, true));
     } else if (op === "MAX") {
       return new LazyBuffer(tf.max(this.data, axes, true));

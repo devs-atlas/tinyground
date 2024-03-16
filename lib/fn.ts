@@ -1,4 +1,4 @@
-import { Tensor } from "./tensor";
+import Tensor from "./tensor";
 
 export default class Fn {
   needs_input_grad: boolean[];
@@ -22,9 +22,9 @@ export default class Fn {
     const tensor = new Tensor(
       context.forward(
         tensors.map((t) => t.data),
-        options
+        options,
       ),
-      context.requires_grad
+      context.requires_grad,
     );
     if (context.requires_grad) {
       tensor.context = context;
