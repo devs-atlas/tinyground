@@ -1,6 +1,6 @@
-import { Fn } from "./teeny";
-import { argsort } from "./utils";
+import Fn from "./fn";
 import LazyBuffer from "./lazy";
+import { argsort } from "./utils";
 
 export class Contiguous extends Fn {
   forward(x: LazyBuffer) {
@@ -134,8 +134,9 @@ export class Less extends Fn {
   }
 }
 
+// TODO: change other ops methods
 export class Add extends Fn {
-  forward(x: LazyBuffer, y: LazyBuffer) {
+  forward([x, y]: LazyBuffer[]) {
     return x.e("ADD", y);
   }
   backward(grad_output: LazyBuffer) {
@@ -203,30 +204,30 @@ export class Div extends Fn {
 // TERNARY OPS
 
 //TODO: ADD SUPPORT FOR WHERE
-export class Where extends Fn {
-  x!: LazyBuffer;
-  forward(x: LazyBuffer, y: LazyBuffer, z: LazyBuffer) {
-    this.x = x;
-    return x.e("WHERE", y, z);
-  }
-  backward(grad_output: LazyBuffer) {
-    return [
-      undefined,
-      this.needs_input_grad[1]
-        ? this.x.e("WHERE", grad_output, grad_output.const(0))
-        : undefined,
-      this.needs_input_grad[2]
-        ? this.x.e("WHERE", grad_output.const(0), grad_output)
-        : undefined,
-    ];
-  }
-}
+// export class Where extends Fn {
+//   x!: LazyBuffer;
+//   forward(x: LazyBuffer, y: LazyBuffer, z: LazyBuffer) {
+//     this.x = x;
+//     return x.e("WHERE", y, z);
+//   }
+//   backward(grad_output: LazyBuffer) {
+//     return [
+//       undefined,
+//       this.needs_input_grad[1]
+//         ? this.x.e("WHERE", grad_output, grad_output.const(0))
+//         : undefined,
+//       this.needs_input_grad[2]
+//         ? this.x.e("WHERE", grad_output.const(0), grad_output)
+//         : undefined,
+//     ];
+//   }
+// }
 
 // REDUCE OPS
 
 export class Sum extends Fn {
   input_shape!: number[];
-  forward(x: LazyBuffer, new_shape: number[]) {
+  forward([x]: LazyBuffer[], { new_shape }: {new_shape: number[]}) {
     this.input_shape = x.shape;
     return x.r("SUM", new_shape);
   }
@@ -238,7 +239,7 @@ export class Sum extends Fn {
 export class Max extends Fn {
   x!: LazyBuffer;
   ret!: LazyBuffer;
-  forward(x: LazyBuffer, new_shape: number[]) {
+  forward([x]: LazyBuffer[], { new_shape }: {new_shape: number[]}) {
     this.x = x;
     this.ret = x.r("MAX", new_shape);
     return this.ret;
@@ -270,7 +271,7 @@ export class Expand extends Fn {
 export class Reshape extends Fn {
   input_shape!: number[];
 
-  forward(x: LazyBuffer, shape: number[]) {
+  forward([x]: LazyBuffer[], { shape }: { shape: number[] }) {
     this.input_shape = x.shape;
     return x.reshape(shape);
   }

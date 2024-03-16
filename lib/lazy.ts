@@ -1,4 +1,4 @@
-import { BinaryOps, LoadOps, UnaryOps, ReduceOps } from "./ops";
+import { BinaryOps, LoadOps, ReduceOps, UnaryOps } from "./ops";
 
 import * as tf from "@tensorflow/tfjs";
 
@@ -85,7 +85,6 @@ export default class LazyBuffer {
   }
 
   r(op: ReduceOps, new_shape: number[]) {
-    //add debug printing
     if (this.shape.length !== new_shape.length) {
       throw new Error("Reduce shapes must have same dimensions");
     }
@@ -96,7 +95,11 @@ export default class LazyBuffer {
         axes.push(i);
       }
     }
+
+    console.log(axes)
+    console.log(this.data.dataSync())
     if (op === "SUM") {
+      console.log('sum')
       return new LazyBuffer(tf.sum(this.data, axes, true));
     } else if (op === "MAX") {
       return new LazyBuffer(tf.max(this.data, axes, true));
@@ -136,5 +139,8 @@ export default class LazyBuffer {
     const end = this.shape;
     const strides = arg;
     return new LazyBuffer(this.data.stridedSlice(begin, end, strides));
+  }
+  toString() {
+    return `LazyBuffer: ${this.shape}, ${this.dtype}`;
   }
 }
