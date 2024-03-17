@@ -7,7 +7,7 @@ function close(x: tf.Tensor, y: tf.Tensor, epsilon = 0.001): boolean {
 }
 
 expect.extend({
-  toEqual(received: Tensor, expected: tf.Tensor) {
+  toEqual(received: Tensor, expected) {
     if (close(received.data.data, expected)) {
       return {
         message: () => `tensors matched`,
@@ -23,7 +23,7 @@ expect.extend({
 });
 
 describe("Basic Tensor Ops", () => {
-  test("add", () => {
+  test("add with tensor", () => {
     let t1 = new Tensor([
       [1, 2],
       [3, 4],
@@ -37,13 +37,26 @@ describe("Basic Tensor Ops", () => {
     ]);
 
     const result = t1.add(t2);
-    const expected = tf.tensor([
+
+    expect(result).toEqual([
       [2, 4],
       [6, 8],
       [10, 13],
     ]);
+  });
 
-    expect(result).toEqual(expected);
+  test("add with number", () => {
+    let t1 = new Tensor([
+      [1, 2],
+      [3, 4],
+      [5, 7],
+    ]);
+
+    expect(t1.add(5)).toEqual([
+      [6, 7],
+      [8, 9],
+      [10, 12],
+    ]);
   });
 
   const data = [
@@ -61,9 +74,20 @@ describe("Basic Tensor Ops", () => {
     expect(tensor.max()).toEqual([Math.max(...data.flat())]);
   });
 
-  console.log(tensor.min().data.data.dataSync())
-
   test("min", () => {
     expect(tensor.min()).toEqual([Math.min(...data.flat())]);
+  });
+
+  test("tranpose with default axes", () => {
+    let t1 = new Tensor([
+      [1, 2],
+      [3, 4],
+      [5, 7],
+    ]);
+
+    expect(t1.transpose()).toEqual([
+      [1, 3, 5],
+      [2, 4, 7],
+    ]);
   });
 });

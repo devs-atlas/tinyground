@@ -53,8 +53,11 @@ export default class Tensor {
     return Tensor.full(this.shape, fill_value, true);
   }
 
-  add(tensor: Tensor) {
-    return mlops.Add.run_op([this, tensor]);
+  add(addend: Tensor | number) {
+    return mlops.Add.run_op([
+      this,
+      addend instanceof Tensor ? addend : new Tensor(addend),
+    ]);
   }
 
   sub(tensor: Tensor) {
