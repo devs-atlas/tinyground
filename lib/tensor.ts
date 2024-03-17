@@ -16,7 +16,7 @@ export default class Tensor {
 
   constructor(
     data: number | NDArray | tf.Tensor | LazyBuffer,
-    requires_grad: boolean = false,
+    requires_grad: boolean = false
   ) {
     if (data instanceof tf.Tensor) {
       this.data = new LazyBuffer(data);
@@ -192,6 +192,13 @@ export default class Tensor {
       }
     }
     return mlops.Reshape.run_op([this], { shape });
+  }
+
+  expand(shape: number[]) {
+    return mlops.Expand.run_op(
+      [this],
+      shape.map((x, i) => (x === -1 ? this.shape[i] : x))
+    );
   }
 
   toString() {
