@@ -67,15 +67,18 @@ describe("Basic Tensor Ops", () => {
   const tensor = new Tensor(data);
 
   test("sum", () => {
-    expect(tensor.sum()).toEqual([data.flat().reduce((a, b) => a + b)]);
+    // @ts-ignore
+    expect(tensor.sum()).toEqual([data.flat(Infinity).reduce((a, b) => a + b)]);
   });
 
   test("max", () => {
-    expect(tensor.max()).toEqual([Math.max(...data.flat())]);
+    // @ts-ignore
+    expect(tensor.max()).toEqual([Math.max(...data.flat(Infinity))]);
   });
 
   test("min", () => {
-    expect(tensor.min()).toEqual([Math.min(...data.flat())]);
+    // @ts-ignore
+    expect(tensor.min()).toEqual([Math.min(...data.flat(Infinity))]);
   });
 
   test("tranpose with default axes", () => {
