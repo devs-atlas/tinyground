@@ -4,3 +4,5 @@ export function argsort(x: number[]): number[] {
     .sort((a, b) => a.value - b.value) // Sort by value
     .map(({ index }) => index); // Extract the sorted indices
 }
+
+export type NDArray = number[] | NDArray[];

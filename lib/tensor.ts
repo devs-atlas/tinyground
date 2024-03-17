@@ -2,10 +2,9 @@ import * as tf from "@tensorflow/tfjs";
 import LazyBuffer from "./lazy";
 import * as mlops from "./mlops";
 
-type NDArray = number[] | NDArray[];
-
 import Fn from "./fn";
 import { ReduceOps } from "./ops";
+import type { NDArray } from "./utils";
 
 export default class Tensor {
   grad?: Tensor;
@@ -125,59 +124,10 @@ export default class Tensor {
   log() {
     return mlops.Log.run_op([this]);
   }
-  // log2() {
-  //   return mlops.Log.run_op([this]).div();
-  // }
 
-  // broadcasted binary mlops
-
-  // _broadcasted(y: Tensor | number, reverse: boolean = false) {
-  //   let x: Tensor = this;
-  //   if (!(y instanceof Tensor)) {
-  //     if (this.shape.includes(0)) {
-  //       return this, this.full_like(y);
-  //     }
-  //     //TODO: dtype here
-  //     y = new Tensor(y, false);
-  //   }
-  //
-  //   [x, y] = reverse ? [y, x] : [x, y];
-  //
-  //   let xshape = x.shape;
-  //   let yshape = y.shape;
-  //
-  //   if (xshape === yshape) {
-  //     return [x, y];
-  //   }
-  //
-  //   let shape_delta = xshape.length - yshape.length;
-  //   if (shape_delta > 0) {
-  //     const newShape = new Array(shape_delta).fill(1); // Create an array of `shape_delta` ones
-  //     y = y.reshape([...newShape, ...y.shape]); // Spread the new dimensions and original shape
-  //   } else if (shape_delta < 0) {
-  //     const newShape = new Array(shape_delta).fill(-1); // Create an array of `shape_delta` ones
-  //     x = x.reshape([...newShape, ...y.shape]); // Spread the new dimensions and original shape
-  //   }
-  //   xshape = x.shape;
-  //   //@ts-ignore
-  //   yshape = y.shape;
-  //   if (xshape == yshape) {
-  //     return [x, y];
-  //   }
-  //
-  //   //do this
-  //   let shape_ret = xshape.map((x, i) => Math.max(x, yshape[i]));
-  //
-  //   if (xshape !== shape_ret) {
-  //     x = x.expand(shape_ret);
-  //   }
-  //   if (yshape !== shape_ret) {
-  //     y = y.expand(shape_ret);
-  //   }
-  //   return [x, y];
-  // }
-
-  // movement mlops
+  permute(order: number[]) {
+    return mlops.Permute.run_op([this], order);
+  }
 
   reshape(shape: number | (number | null)[]) {
     if (typeof shape === "number") shape = [shape];
