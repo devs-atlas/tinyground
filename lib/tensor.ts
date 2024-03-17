@@ -154,6 +154,16 @@ export default class Tensor {
     );
   }
 
+  transpose(axis1 = 1, axis2 = 0): Tensor {
+    let order = [...Array(this.shape.length)].map((_, i) => i);
+    [order[axis1], order[axis2]] = [order[axis2], order[axis1]];
+    return this.permute(order);
+  }
+
+  get T() {
+    return this.transpose();
+  }
+
   toString() {
     let repr = `Data: ${this.data.toString()}`;
     if (this.requires_grad) {
