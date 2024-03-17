@@ -4,7 +4,7 @@ import * as mlops from "./mlops";
 
 import Fn from "./fn";
 import { ReduceOps } from "./ops";
-import type { NDArray } from "./utils";
+import { type NDArray, isNDArray } from "./utils";
 
 export default class Tensor {
   grad?: Tensor;
@@ -23,7 +23,7 @@ export default class Tensor {
     } else if (typeof data == "number") {
       this.data = new LazyBuffer(tf.tensor([data]));
       this.shape = [];
-    } else if (Array.isArray(data)) {
+    } else if (isNDArray(data)) {
       this.data = new LazyBuffer(tf.tensor(data));
       this.shape = this.data.shape;
     } else {
@@ -53,19 +53,24 @@ export default class Tensor {
     return Tensor.full(this.shape, fill_value, true);
   }
 
+  static argfix(x: number | Tensor) {
+    return x instanceof Tensor ? x : new Tensor(x);
+  }
+
   add(addend: Tensor | number) {
-    return mlops.Add.run_op([
-      this,
-      addend instanceof Tensor ? addend : new Tensor(addend),
-    ]);
+    return mlops.Add.run_op([this, Tensor.argfix(addend)]);
   }
 
-  sub(tensor: Tensor) {
-    return mlops.Sub.run_op([this, tensor]);
+  sub(minuend: Tensor | number) {
+    return mlops.Sub.run_op([this, Tensor.argfix(minuend)]);
   }
 
-  mul(tensor: Tensor) {
-    return mlops.Mul.run_op([this, tensor]);
+  mul(factor: Tensor | number) {
+    return mlops.Mul.run_op([this, Tensor.argfix(factor)]);
+  }
+
+  div(divisor: Tensor | number) {
+    return mlops.Div.run_op([this, Tensor.argfix(divisor)]);
   }
 
   _reduce(op: ReduceOps, axis?: number[] | number, keepdim = false): Tensor {
@@ -113,8 +118,7 @@ export default class Tensor {
     return this.neg().max(axis, keepdim).neg();
   }
 
-  // mlops (unary)
-
+  // Unary mlops
   neg() {
     return mlops.Neg.run_op([this]);
   }
@@ -126,6 +130,38 @@ export default class Tensor {
   }
   log() {
     return mlops.Log.run_op([this]);
+  }
+  log2() {
+    return mlops.Log.run_op([this]).div(Math.log(2));
+  }
+  exp() {
+    return mlops.Exp.run_op([this]);
+  }
+  exp2() {
+    return mlops.Exp.run_op([this.mul(Math.log(2))]);
+  }
+  relu() {
+    return mlops.Relu.run_op([this]);
+  }
+  sigmoid() {
+    return mlops.Sigmoid.run_op([this]);
+  }
+  sqrt() {
+    return mlops.Sqrt.run_op([this]);
+  }
+  rsqrt() {
+    return new Tensor([1]).div(mlops.Sqrt.run_op([this]));
+  }
+  sin() {
+    return mlops.Sin.run_op([this]);
+  }
+  cos() {
+    return this.neg()
+      .add(Math.PI / 2)
+      .sin();
+  }
+  tan() {
+    return this.sin().div(this.cos());
   }
 
   permute(order: number[]) {

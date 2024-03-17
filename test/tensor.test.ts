@@ -93,4 +93,14 @@ describe("Basic Tensor Ops", () => {
       [2, 4, 7],
     ]);
   });
+
+  test("sqrt", () => {
+    let data1 = [4, 2, 5, 12];
+    expect(new Tensor(data1).sqrt()).toEqual(data1.map((e) => Math.sqrt(e)));
+  });
+
+  test("relu", () => {
+    let data1 = [-123, 4, 5, 3];
+    expect(new Tensor(data1).relu()).toEqual(data1.map((e) => (e > 0 ? e : 0)));
+  });
 });

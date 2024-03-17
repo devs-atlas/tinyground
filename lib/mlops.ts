@@ -281,6 +281,7 @@ export class Reshape extends Fn {
   }
 }
 
+// TODO: testing
 export class Permute extends Fn {
   input_order!: number[];
 
