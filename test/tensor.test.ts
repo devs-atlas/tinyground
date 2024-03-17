@@ -1,7 +1,7 @@
 import * as tf from "@tensorflow/tfjs";
 import Tensor from "../lib/tensor";
 
-function close(x: tf.Tensor, y: tf.Tensor, epsilon = 0.001): boolean {
+function close(x: tf.Tensor, y: tf.TensorLike, epsilon = 0.001): boolean {
   const difference = x.sub(y).abs();
   return tf.max(difference).dataSync()[0] < epsilon;
 }
