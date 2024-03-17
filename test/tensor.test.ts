@@ -46,13 +46,24 @@ describe("Basic Tensor Ops", () => {
     expect(result).toEqual(expected);
   });
 
-  test("sum", () => {
-    let t1 = new Tensor([
-      [3, 4],
-      [5, 7],
-      [1, 2],
-    ]);
+  const data = [
+    [3, 4],
+    [5, 7],
+    [1, 2],
+  ];
+  const tensor = new Tensor(data);
 
-    expect(t1.sum()).toEqual([22]);
+  test("sum", () => {
+    expect(tensor.sum()).toEqual([data.flat().reduce((a, b) => a + b)]);
+  });
+
+  test("max", () => {
+    expect(tensor.max()).toEqual([Math.max(...data.flat())]);
+  });
+
+  console.log(tensor.min().data.data.dataSync())
+
+  test("min", () => {
+    expect(tensor.min()).toEqual([Math.min(...data.flat())]);
   });
 });

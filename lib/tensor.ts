@@ -108,7 +108,7 @@ export default class Tensor {
     return this._reduce(mlops.Max, axis, keepdim);
   }
   min(axis?: number | number[], keepdim = false) {
-    return -this.neg().max((axis = axis), (keepdim = keepdim));
+    return this.neg().max(axis, keepdim).neg();
   }
 
   // mlops (unary)
