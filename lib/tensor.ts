@@ -19,17 +19,14 @@ export default class Tensor {
   ) {
     if (data instanceof tf.Tensor) {
       this.data = new LazyBuffer(data);
-      this.shape = data.shape;
     } else if (typeof data == "number") {
       this.data = new LazyBuffer(tf.tensor([data]));
-      this.shape = this.data.shape;
     } else if (isNDArray(data)) {
       this.data = new LazyBuffer(tf.tensor(data));
-      this.shape = this.data.shape;
     } else {
       this.data = data;
-      this.shape = data.shape;
     }
+    this.shape = this.data.shape;
     this.requires_grad = requires_grad;
   }
 
