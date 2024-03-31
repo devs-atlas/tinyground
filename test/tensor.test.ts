@@ -67,6 +67,9 @@ describe("Basic Tensor Ops", () => {
   const tensor = new Tensor(data);
 
   test("sum", () => {
+
+    // @ts-ignore
+    console.log(`sum shape: ${tensor.sum()}; expected shape: ${[data.flat(Infinity).reduce((a, b) => a + b)]}`)
     // @ts-ignore
     expect(tensor.sum()).toEqual([data.flat(Infinity).reduce((a, b) => a + b)]);
   });
@@ -102,5 +105,12 @@ describe("Basic Tensor Ops", () => {
   test("relu", () => {
     let data1 = [-123, 4, 5, 3];
     expect(new Tensor(data1).relu()).toEqual(data1.map((e) => (e > 0 ? e : 0)));
+  });
+
+  test("backward", () => {
+    let data1 = [1, 2, 3, 4, 5];
+
+    let t1 = new Tensor(data1)
+    expect(new Tensor(data1).sum().backward()).toEqual([1, 1, 1, 1, 1]);
   });
 });

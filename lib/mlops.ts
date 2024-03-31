@@ -72,9 +72,10 @@ export class Relu extends Fn {
   ret!: LazyBuffer;
   forward([x]: LazyBuffer[]) {
     this.ret = x.e("MAX", x.const(0));
+    return this.ret;
   }
   backward(grad_output: LazyBuffer) {
-    this.ret.const(0).e("CMPLT", this.ret).e("MUL", grad_output);
+    return this.ret.const(0).e("CMPLT", this.ret).e("MUL", grad_output);
   }
 }
 
@@ -281,7 +282,6 @@ export class Reshape extends Fn {
   }
 }
 
-// TODO: testing
 export class Permute extends Fn {
   input_order!: number[];
 

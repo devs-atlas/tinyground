@@ -1,3 +1,4 @@
+import LazyBuffer from "./lazy";
 import Tensor from "./tensor";
 
 export default class Fn {
@@ -14,18 +15,19 @@ export default class Fn {
   }
 
   forward(_: any, ...__: any): any {}
-  backward(_: any, ...__: any): any {}
+  // @ts-ignore
+  backward(_: any, ...__: any): LazyBuffer | (LazyBuffer | undefined)[] {}
 
   static run_op(tensors: Tensor[], options = {}): Tensor {
-    // TODO: can we just make this "Fn"?
     const context = new this(tensors);
     const tensor = new Tensor(
       context.forward(
         tensors.map((t) => t.data),
-        options,
+        options
       ),
-      context.requires_grad,
+      context.requires_grad
     );
+    console.log(`returning tensor of shape ${tensor.shape}`)
     if (context.requires_grad) {
       tensor.context = context;
     }

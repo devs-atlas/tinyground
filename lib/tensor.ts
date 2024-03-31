@@ -90,13 +90,13 @@ export default class Tensor {
       if (keepdim) {
         reducedShape = reducedShape.map((axis) => (axis ? axis : 1));
       }
-      // TODO: fix that
       const fillVal = op === "SUM" ? 0 : Infinity;
       return Tensor.full(reducedShape, fillVal, this.requires_grad);
     }
 
     const new_shape = this.shape.map((s, i) => (axis_.includes(i) ? 1 : s));
 
+    console.log(`returning reduce of op ${op} w/ shape ${new_shape}`)
     let ret =
       op === "SUM"
         ? mlops.Sum.run_op([this], { new_shape })
@@ -208,17 +208,56 @@ export default class Tensor {
     return repr;
   }
 
-  // deepwalk() {
-  //   
-  // }
+  deepwalk() {
+    const _dfs = (node: Tensor, seen: Set<Tensor>, nodes: Tensor[]) => {
+      seen.add(node);
+      for (let i of node.context?.parents ?? []) {
+        if (!seen.has(i)) _dfs(i, seen, nodes);
+        nodes.push(node);
+      }
+      return nodes;
+    };
+    return _dfs(this, new Set<Tensor>(), new Array<Tensor>());
+  }
 
-  // backward() {
-  //   if (this.shape != [1]) {
-  //     console.log('can only backprop on scalars');
-  //   }
-  //
-  //   this.grad = new Tensor(1.0, false);
-  //
-  //
-  // }
+  backward(): Tensor {
+    if (this.shape.length !== 1 || this.shape[0] !== 1) {
+      throw new Error("can only backprop on scalars");
+    }
+
+    this.grad = new Tensor(1.0, false);
+
+    for (let node of this.deepwalk().reverse()) {
+      if (node.grad === undefined)
+        throw new Error("cannot deepwalk node with undefined grad");
+
+      if (node.context?.parents === undefined)
+        throw new Error("cannot deepwalk node with undefined parents");
+
+      let grads = node.context?.backward(node.grad.data)!;
+      let _grads = (grads instanceof LazyBuffer ? [grads] : grads)
+        .map((g) => {
+          if (g !== undefined) return new Tensor(g, false);
+        })
+        .filter(Boolean);
+
+      for (let i = 0; i < _grads.length; ++i) {
+        let [t, g] = [node.context?.parents[i], _grads[i]];
+
+        if (!t?.requires_grad) continue;
+
+        // shapes must be equal
+        if (!g!.shape.every((e, i) => e === t.shape[i])) {
+          throw new Error(
+            `Grade shape {g.shape} must match tensor shape {t.shape}`
+          );
+        }
+
+        t.grad = t.grad === undefined ? g : t.grad.add(g!);
+      }
+      // delete context
+      node.context = undefined;
+    }
+    return this;
+  }
 }
