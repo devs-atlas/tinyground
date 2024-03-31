@@ -5,4 +5,12 @@ export function argsort(x: number[]): number[] {
     .map(({ index }) => index); // Extract the sorted indices
 }
 
+export function isNDArray(data: any): data is NDArray {
+  if (Array.isArray(data)) {
+    // Every element must either be a number or an NDArray itself
+    return data.every(element => typeof element === 'number' || isNDArray(element));
+  }
+  return false;
+}
+
 export type NDArray = number[] | NDArray[];

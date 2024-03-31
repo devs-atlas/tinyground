@@ -22,7 +22,7 @@ export default class Tensor {
       this.shape = data.shape;
     } else if (typeof data == "number") {
       this.data = new LazyBuffer(tf.tensor([data]));
-      this.shape = [];
+      this.shape = this.data.shape;
     } else if (isNDArray(data)) {
       this.data = new LazyBuffer(tf.tensor(data));
       this.shape = this.data.shape;
@@ -207,4 +207,18 @@ export default class Tensor {
     }
     return repr;
   }
+
+  // deepwalk() {
+  //   
+  // }
+
+  // backward() {
+  //   if (this.shape != [1]) {
+  //     console.log('can only backprop on scalars');
+  //   }
+  //
+  //   this.grad = new Tensor(1.0, false);
+  //
+  //
+  // }
 }
