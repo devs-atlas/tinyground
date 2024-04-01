@@ -69,8 +69,6 @@ describe("Basic Tensor Ops", () => {
   test("sum", () => {
 
     // @ts-ignore
-    console.log(`sum shape: ${tensor.sum()}; expected shape: ${[data.flat(Infinity).reduce((a, b) => a + b)]}`)
-    // @ts-ignore
     expect(tensor.sum()).toEqual([data.flat(Infinity).reduce((a, b) => a + b)]);
   });
 
@@ -110,7 +108,7 @@ describe("Basic Tensor Ops", () => {
   test("backward", () => {
     let data1 = [1, 2, 3, 4, 5];
 
-    let t1 = new Tensor(data1)
-    expect(new Tensor(data1).sum().backward()).toEqual([1, 1, 1, 1, 1]);
+    let t3 = new Tensor(data1).sum(undefined, true).backward()
+    expect(t3.grad).toEqual([1, 1, 1, 1, 1]);
   });
 });

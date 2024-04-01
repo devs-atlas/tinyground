@@ -194,9 +194,9 @@ export class Div extends Fn {
       this.needs_input_grad[0] ? grad_output.e("DIV", this.y) : undefined,
       this.needs_input_grad[1]
         ? grad_output
-            .e("NEG")
-            .e("MUL", this.x)
-            .e("DIV", this.y.e("MUL", this.y))
+          .e("NEG")
+          .e("MUL", this.x)
+          .e("DIV", this.y.e("MUL", this.y))
         : undefined,
     ];
   }

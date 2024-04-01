@@ -13,6 +13,7 @@ export default class Tensor {
   requires_grad: boolean;
   context?: Fn;
 
+  // Tensor offers four initialization options: number, multi-dimensional array, tf.Tensor, or a LazyBuffer
   constructor(
     data: number | NDArray | tf.Tensor | LazyBuffer,
     requires_grad: boolean = false
@@ -70,8 +71,14 @@ export default class Tensor {
     return mlops.Div.run_op([this, Tensor.argfix(divisor)]);
   }
 
+  /* 
+  * We need _reduce to systematize the argument handling for all reduce ops,
+  * giving us a convenient way to perform these reduction operations
+  * under a common interface(_reduce).
+  */
   _reduce(op: ReduceOps, axis?: number[] | number, keepdim = false): Tensor {
     let axis_: number[];
+    //if no axis, reduce along all.
     if (axis === undefined) {
       axis_ = Array.from({ length: this.shape.length }, (_, index) => index);
     } else if (typeof axis === "number") {
@@ -80,9 +87,15 @@ export default class Tensor {
       axis_ = axis;
     }
 
+
+    /* 
+     * The new shape will be the original shape but the axes
+     * specified in axis argument are omitted because they're reduced.
+     */
     // @ts-ignore
     let reducedShape = this.shape.filter((_, index) => !axis_.includes(index));
 
+    //TODO: Figure out this line - why would reducedShape have 0?
     if (reducedShape.includes(0) && !this.shape.includes(0)) {
       if (keepdim) {
         reducedShape = reducedShape.map((axis) => (axis ? axis : 1));
@@ -91,14 +104,16 @@ export default class Tensor {
       return Tensor.full(reducedShape, fillVal, this.requires_grad);
     }
 
+    //the new_shape will have 1 in place of the original shape in
+    //axes that are reduced
     const new_shape = this.shape.map((s, i) => (axis_.includes(i) ? 1 : s));
 
-    console.log(`returning reduce of op ${op} w/ shape ${new_shape}`)
     let ret =
       op === "SUM"
         ? mlops.Sum.run_op([this], { new_shape })
         : mlops.Max.run_op([this], { new_shape });
 
+    //if keepdim, reduced axes will be 1, otherwise just gone
     return keepdim ? ret : ret.reshape(reducedShape);
   }
 
@@ -165,6 +180,7 @@ export default class Tensor {
     return mlops.Permute.run_op([this], order);
   }
 
+  //-1 indexing --> one dim can be -1, this dim will be leftover elements
   reshape(shape: number | (number | null)[]) {
     if (typeof shape === "number") shape = [shape];
     if (shape.filter((e) => e === -1).length > 1)
@@ -180,6 +196,7 @@ export default class Tensor {
     return mlops.Reshape.run_op([this], { shape });
   }
 
+  //-1 indexing --> for these indices, dont expand and use original shape
   expand(shape: number[]) {
     return mlops.Expand.run_op(
       [this],
@@ -217,6 +234,14 @@ export default class Tensor {
     return _dfs(this, new Set<Tensor>(), new Array<Tensor>());
   }
 
+
+  /*
+  * to call backward on an mlop, the grad_output being fed in from node ahead
+  * must have defined grad
+  *
+  * this mlop backward function can either return a single gradient(needs to be wrapped)or a list of gradients. some of the operands may not require gradients(requires_grad=false)
+  * if this is the case, just skip over them in loop.
+  */
   backward(): Tensor {
     if (this.shape.length !== 1 || this.shape[0] !== 1) {
       throw new Error("can only backprop on scalars");
@@ -225,6 +250,7 @@ export default class Tensor {
     this.grad = new Tensor(1.0, false);
 
     for (let node of this.deepwalk().reverse()) {
+      //TODO: Is this right? I think we should still walk through 
       if (node.grad === undefined)
         throw new Error("cannot deepwalk node with undefined grad");
 

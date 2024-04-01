@@ -112,7 +112,7 @@ export default class LazyBuffer {
   }
 
   // TODO: Allow for the fancy indexing of teenygrad - None, not specifying certain dims, just a number...
-  // TODO: Can I give a better name than arg (almost certainly)
+  // TODO: Can I give a better name than arg
   reshape(arg: number[]) {
     return new LazyBuffer(this.data.reshape(arg));
   }
