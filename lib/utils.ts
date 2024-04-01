@@ -5,7 +5,7 @@ export function argsort(x: number[]): number[] {
     .map(({ index }) => index); // Extract the sorted indices
 }
 
-export function isNDArray(data: any): data is NDArray {
+export function isNDArrayTS(data: any): data is NDArray {
   if (Array.isArray(data)) {
     // Every element must either be a number or an NDArray itself
     return data.every(element => typeof element === 'number' || isNDArray(element));
