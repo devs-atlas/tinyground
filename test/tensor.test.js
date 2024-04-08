@@ -1,13 +1,13 @@
 import * as tf from "@tensorflow/tfjs";
 import Tensor from "../lib/tensor";
 
-function close(x: tf.Tensor, y: tf.TensorLike, epsilon = 0.001): boolean {
+function close(x, y, epsilon = 0.001){
   const difference = x.sub(y).abs();
   return tf.max(difference).dataSync()[0] < epsilon;
 }
 
 expect.extend({
-  toEqual(received: Tensor, expected) {
+  toEqual(received, expected) {
     if (close(received.data.data, expected)) {
       return {
         message: () => `tensors matched`,
