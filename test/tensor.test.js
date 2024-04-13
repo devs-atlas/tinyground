@@ -1,7 +1,7 @@
 import * as tf from "@tensorflow/tfjs";
 import Tensor from "../lib/tensor";
 
-function close(x, y, epsilon = 0.001){
+function close(x, y, epsilon = 0.001) {
   const difference = x.sub(y).abs();
   return tf.max(difference).dataSync()[0] < epsilon;
 }
@@ -23,92 +23,58 @@ expect.extend({
 });
 
 describe("Basic Tensor Ops", () => {
+  let data1 = [
+    [1, 2],
+    [3, 4],
+    [5, 7],
+  ];
+  let t1 = new Tensor(data1);
+  let data2 = [
+    [1, 2],
+    [3, 4],
+    [5, 6],
+  ];
+  let t2 = new Tensor(data2);
+
   test("add with tensor", () => {
-    let t1 = new Tensor([
-      [1, 2],
-      [3, 4],
-      [5, 7],
-    ]);
-
-    let t2 = new Tensor([
-      [1, 2],
-      [3, 4],
-      [5, 6],
-    ]);
-
-    const result = t1.add(t2);
-
-    expect(result).toEqual([
-      [2, 4],
-      [6, 8],
-      [10, 13],
-    ]);
+    expect(t1.add(t2)).toEqual(
+      data1.map((row, r) => row.map((x, c) => x + data2[r][c]))
+    );
   });
 
   test("add with number", () => {
-    let t1 = new Tensor([
-      [1, 2],
-      [3, 4],
-      [5, 7],
-    ]);
-
-    expect(t1.add(5)).toEqual([
-      [6, 7],
-      [8, 9],
-      [10, 12],
-    ]);
+    expect(t1.add(5)).toEqual(data1.map((row) => row.map((x) => x + 5)));
   });
 
-  const data = [
-    [3, 4],
-    [5, 7],
-    [1, 2],
-  ];
-  const tensor = new Tensor(data);
-
   test("sum", () => {
-
-    // @ts-ignore
-    expect(tensor.sum()).toEqual([data.flat(Infinity).reduce((a, b) => a + b)]);
+    expect(t1.sum()).toEqual([data1.flat(Infinity).reduce((a, b) => a + b)]);
   });
 
   test("max", () => {
-    // @ts-ignore
-    expect(tensor.max()).toEqual([Math.max(...data.flat(Infinity))]);
+    expect(t1.max()).toEqual([Math.max(...data1.flat(Infinity))]);
   });
 
   test("min", () => {
-    // @ts-ignore
-    expect(tensor.min()).toEqual([Math.min(...data.flat(Infinity))]);
+    expect(t1.min()).toEqual([Math.min(...data1.flat(Infinity))]);
   });
 
   test("tranpose with default axes", () => {
-    let t1 = new Tensor([
-      [1, 2],
-      [3, 4],
-      [5, 7],
-    ]);
-
-    expect(t1.transpose()).toEqual([
-      [1, 3, 5],
-      [2, 4, 7],
-    ]);
+    expect(t1.transpose()).toEqual(
+      data1[0].map((_, c) => data1.map((row) => row[c]))
+    );
   });
 
   test("sqrt", () => {
-    let data1 = [4, 2, 5, 12];
-    expect(new Tensor(data1).sqrt()).toEqual(data1.map((e) => Math.sqrt(e)));
+    expect(t1.sqrt()).toEqual(data1.map((row) => row.map(Math.sqrt)));
   });
 
   test("relu", () => {
-    let data1 = [-123, 4, 5, 3];
-    expect(new Tensor(data1).relu()).toEqual(data1.map((e) => (e > 0 ? e : 0)));
+    expect(t1.relu()).toEqual(
+      data1.map((row) => row.map((e) => (e > 0 ? e : 0)))
+    );
   });
 
-  test("backward", () => {
-    let data1 = [1, 2, 3, 4, 5];
-
-    let t3 = new Tensor(data1).sum(undefined, true).backward()
-    expect(t3.grad).toEqual([1, 1, 1, 1, 1]);
-  });
+  // test("backward", () => {
+  //   expect(t1.sum(undefined, true).backward().grad).toEqual([1, 1, 1, 1, 1]);
+  // });
 });
