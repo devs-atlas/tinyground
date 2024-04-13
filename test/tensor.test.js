@@ -6,16 +6,32 @@ function close(x, y, epsilon = 0.001) {
   return tf.max(difference).dataSync()[0] < epsilon;
 }
 
+function arrayEquals(a, b) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; ++i) if (a[i] != b[i]) return false;
+  return true;
+}
+
 expect.extend({
   toEqual(received, expected) {
+    let t = new Tensor(expected);
+
+    const shapeMsg = `Got shape ${received.shape}; expected shape ${t.shape}`;
+
+    if (!arrayEquals(t.shape, received.shape)) {
+      return {
+        message: () => shapeMsg,
+        pass: false,
+      };
+    }
     if (close(received.data.data, expected)) {
       return {
-        message: () => `tensors matched`,
+        message: () => `tensors matched; ${shapeMsg}`,
         pass: true,
       };
     } else {
       return {
-        message: () => `expected tensors to be equal`,
+        message: () => `expected tensors to be equal; ${shapeMsg}`,
         pass: false,
       };
     }
@@ -47,15 +63,21 @@ describe("Basic Tensor Ops", () => {
   });
 
   test("sum", () => {
-    expect(t1.sum()).toEqual([data1.flat(Infinity).reduce((a, b) => a + b)]);
+    expect(t1.sum(undefined, true)).toEqual([
+      [data1.flat(Infinity).reduce((a, b) => a + b)],
+    ]);
   });
 
   test("max", () => {
-    expect(t1.max()).toEqual([Math.max(...data1.flat(Infinity))]);
+    expect(t1.max(undefined, true)).toEqual([
+      [Math.max(...data1.flat(Infinity))],
+    ]);
   });
 
   test("min", () => {
-    expect(t1.min()).toEqual([Math.min(...data1.flat(Infinity))]);
+    expect(t1.min(undefined, true)).toEqual([
+      [Math.min(...data1.flat(Infinity))],
+    ]);
   });
 
   test("tranpose with default axes", () => {
