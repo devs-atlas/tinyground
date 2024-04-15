@@ -44,13 +44,13 @@ describe("Basic Tensor Ops", () => {
     [3, 4],
     [5, 7],
   ];
-  let t1 = new Tensor(data1);
+  let t1 = new Tensor(data1, true);
   let data2 = [
     [1, 2],
     [3, 4],
     [5, 6],
   ];
-  let t2 = new Tensor(data2);
+  let t2 = new Tensor(data2, true);
 
   test("add with tensor", () => {
     expect(t1.add(t2)).toEqual(
@@ -96,7 +96,9 @@ describe("Basic Tensor Ops", () => {
     );
   });
 
-  // test("backward", () => {
-  //   expect(t1.sum(undefined, true).backward().grad).toEqual([1, 1, 1, 1, 1]);
-  // });
+  test("backward", () => {
+    let out = t1.add(t2).sum(undefined, true);
+    out = out.backward()
+    expect(t1.grad).toEqual([[1, 1], [1, 1], [1, 1]]);
+  });
 });
