@@ -89,6 +89,16 @@ describe("Basic Tensor Ops", () => {
   test("sqrt", () => {
     expect(t1.sqrt()).toEqual(data1.map((row) => row.map(Math.sqrt)));
   });
+  test("transpose", () => {
+    const expected = [[1, 3, 5], [2, 4, 7]];
+    expect(t1.transpose()).toEqual(expected);
+  });
+  test("dot", () => {
+    const expected = [[5, 11, 17], [11, 25, 39], [19, 43, 67]]
+    let t2T = t2.transpose();
+    let out = t1.dot(t2T);
+    expect(out).toEqual(expected);
+  })
 
   test("relu", () => {
     expect(t1.relu()).toEqual(
