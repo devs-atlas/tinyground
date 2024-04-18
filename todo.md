@@ -1,3 +1,5 @@
 # TODO
 
-- Fork numjs to add ops
+## frontend
+
+- node connections
