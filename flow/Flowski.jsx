@@ -1,19 +1,25 @@
 "use client";
 
 import ReactFlow, {
-  ReactFlowProvider,
   Background,
   Controls,
   Panel,
+  ReactFlowProvider,
 } from "reactflow";
 import { shallow } from "zustand/shallow";
 
-import { useStore, selector } from "../store/store";
+import { selector, useStore } from "../store/store";
+import TensorNode from "./nodes/tensor";
+import OperationNode from "./nodes/operation";
 
 import "reactflow/dist/style.css";
 
+const nodeTypes = { TensorNode, OperationNode };
+
 function Flowski() {
   const store = useStore(selector, shallow);
+
+  console.log(store);
 
   return (
     <ReactFlowProvider>
@@ -23,7 +29,7 @@ function Flowski() {
         onNodesChange={store.onNodesChange}
         onEdgesChange={store.onEdgesChange}
         onConnect={store.onConnect}
-        nodeTypes={store.nodeTypes}
+        nodeTypes={nodeTypes}
         fitView
       >
         <Background />

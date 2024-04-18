@@ -1,12 +1,29 @@
-import { Handle, NodeProps, Position } from "reactflow";
+import { Handle, Position } from "reactflow";
+// import { useLayoutEffect, useRef } from "react";
 
-const Tensor = ({ id, data }) => {
-  <>
-    <input defaultValue={data.label} />
+import "./tensor.css";
 
-    <Handle type="target" position={Position.Top} />
-    <Handle type="source" position={Position.Bottom} />
-  </>;
+// show shape, requires_grad
+const TensorNode = ({ data }) => {
+  const { label, tensor } = data;
+  // const inputRef = useRef();
+  // NOTE: dynamic width as text updates
+  // useLayoutEffect(() => {
+  //   if (inputRef.current) {
+  //     inputRef.current.style.width = `${Math.max(
+  //       tensor.shape.length,
+  //       "requires_grad: false".length
+  //     )}px`;
+  //   }
+  // }, [tensor.shape.length]);
+
+  return (
+    <>
+      <div>Requires grad: {tensor.requires_grad.toString()}</div>
+      <div>Shape: {tensor.shape}</div>
+      <Handle type="source" position={Position.Right} />
+    </>
+  );
 };
 
-export default Tensor;
+export default TensorNode;
