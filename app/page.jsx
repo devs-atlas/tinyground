@@ -1,10 +1,10 @@
+import Flowski from "../flow/Flowski";
+
 export default function Home() {
   return (
     <main>
-      <div className="flex justify-center items-center min-h-screen">
-        <div>
-          tinyground
-        </div>
+      <div className="w-screen h-screen">
+        <Flowski />
       </div>
     </main>
   );
