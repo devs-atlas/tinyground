@@ -21,7 +21,7 @@ const useStore = create((set, get) => ({
     {
       id: "c",
       type: "OperationNode",
-      data: { tensor: new Tensor(4) },
+      data: { op: "ADD" },
       position: { x: 0, y: 10 },
     },
   ],
