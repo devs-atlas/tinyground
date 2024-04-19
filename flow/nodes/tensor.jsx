@@ -5,7 +5,7 @@ import "./tensor.css";
 
 // show shape, requires_grad
 const TensorNode = ({ data }) => {
-  const { label, tensor } = data;
+  const { tensor } = data;
   // const inputRef = useRef();
   // NOTE: dynamic width as text updates
   // useLayoutEffect(() => {
