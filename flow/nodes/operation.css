@@ -1,0 +1,7 @@
+.react-flow__node-OperationNode {
+  background: #55da64;
+  border-radius: 2px;
+  border: 1px solid red;
+  padding: 2px 10px;
+  font-weight: 700;
+}
