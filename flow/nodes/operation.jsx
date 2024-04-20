@@ -1,6 +1,6 @@
 import "./operation.css";
 
-import { Handle, Position } from "reactflow";
+import { Handle, Position, PanelPosition } from "reactflow";
 import {
   BinaryOps,
   MovementOps,
@@ -22,32 +22,10 @@ const getOpInfo = (opName) => {
   if (MovementOps[opName] !== undefined) return ["Movement", 1];
 };
 
-// TODO: styling does nothing here
-const getHandlePositions = (count) => {
-  switch (count) {
-    case 1:
-      return [{ position: Position.Left }];
-    case 2:
-      return [
-        { position: Position.Left, top: "30%" },
-        { position: Position.Left, top: "70%" },
-      ];
-    case 3:
-      return [
-        { position: Position.Left, top: "20%" },
-        { position: Position.Left, top: "50%" },
-        { position: Position.Left, top: "80%" },
-      ];
-    default:
-      return [];
-  }
-};
-
 const OperationNode = ({ data }) => {
   // TODO: memoize?
   const { op } = data;
   const [type, inputCount] = getOpInfo(op);
-  const handles = getHandlePositions(inputCount);
 
   return (
     <>
@@ -56,8 +34,8 @@ const OperationNode = ({ data }) => {
       {/* TODO: The right number of handles is showing up, but the 
       styling does absolutely nothing - figure out a connections workflow*/}
       {/* nic wants n visually separate handles */}
-      {handles.map((handle, i) => (
-        <Handle key={i} type="source" position={handle.position} />
+      {Array.from({ length: inputCount }).map((_, i) => (
+        <Handle key={i} type="target" position={Position.Left} />
       ))}
     </>
   );
