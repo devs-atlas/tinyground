@@ -9,17 +9,17 @@ import ReactFlow, {
 import { shallow } from "zustand/shallow";
 
 import { selector, useStore } from "../store/store";
-import TensorNode from "./nodes/tensor";
+import AddNodeButton from "./AddNodeButton";
 import OperationNode from "./nodes/operation";
+import TensorNode from "./nodes/tensor";
 
 import "reactflow/dist/style.css";
+import "./Flow.css";
 
 const nodeTypes = { TensorNode, OperationNode };
 
-function Flowski() {
+function Flow() {
   const store = useStore(selector, shallow);
-
-  console.log(store);
 
   return (
     <ReactFlowProvider>
@@ -34,10 +34,16 @@ function Flowski() {
       >
         <Background />
         <Controls showInteractive={false} />
-        <Panel position="top-left">tinyground</Panel>
+        <Panel position="top-left" className="border border-black">
+          tinyground
+        </Panel>
+        <Panel position="top-right">
+          <AddNodeButton type={"TensorNode"} />
+          <AddNodeButton type={"OperationNode"} />
+        </Panel>
       </ReactFlow>
     </ReactFlowProvider>
   );
 }
 
-export default Flowski;
+export default Flow;

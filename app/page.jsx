@@ -1,10 +1,10 @@
-import Flowski from "../flow/Flowski";
+import Flow from "../flow/Flow";
 
 export default function Home() {
   return (
     <main>
       <div className="w-screen h-screen">
-        <Flowski />
+        <Flow />
       </div>
     </main>
   );
