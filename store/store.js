@@ -1,8 +1,8 @@
-import { applyNodeChanges, applyEdgeChanges, addEdge } from "reactflow";
-import TensorNode from "../flow/nodes/tensor";
-import Tensor from "../lib/tensor";
+import { addEdge, applyEdgeChanges, applyNodeChanges } from "reactflow";
 import { create } from "zustand";
-import { v4 as uuidv4 } from "uuid";
+import TensorNode from "../flow/nodes/tensor";
+import OperationNode from "../flow/nodes/operation";
+import Tensor from "../lib/tensor";
 
 const useStore = create((set, get) => ({
   nodes: [
@@ -16,32 +16,36 @@ const useStore = create((set, get) => ({
       id: "b",
       type: "TensorNode",
       data: { tensor: new Tensor(4) },
-      position: { x: 0, y: 10 },
+      position: { x: -100, y: 100 },
     },
     {
       id: "c",
       type: "OperationNode",
-      data: { op: "ADD" },
-      position: { x: 0, y: 10 },
+      data: { op: "MULACC" },
+      position: { x: 100, y: 100 },
     },
   ],
+  edges: [],
   // edges: [{ id: "e1", source: "a", target: "b" }],
   onNodesChange: (changes) => {
-    set({
-      nodes: applyNodeChanges(changes, get().nodes),
-    });
+    set({ nodes: applyNodeChanges(changes, get().nodes) });
   },
   onEdgesChange: (changes) => {
-    set({
-      edges: applyEdgeChanges(changes, get().edges),
-    });
+    set({ edges: applyEdgeChanges(changes, get().edges) });
   },
   onConnect: (connection) => {
-    set({
-      edges: addEdge({ ...connection, id: uuidv4() }, get().edges),
-    });
+    set({ edges: addEdge(connection, get().edges) });
   },
-  nodeTypes: () => ({ TensorNode }),
+  addNode: (node) => {
+    set({ nodes: [...get().nodes, node] });
+  },
+  setNodes: (nodes) => {
+    set({ nodes });
+  },
+  setEdges: (edges) => {
+    set({ edges });
+  },
+  nodeTypes: () => ({ TensorNode, OperationNode }),
 }));
 
 const selector = (state) => ({
@@ -50,6 +54,9 @@ const selector = (state) => ({
   onNodesChange: state.onNodesChange,
   onEdgesChange: state.onEdgesChange,
   onConnect: state.onConnect,
+  setNodes: state.setNodes,
+  addNode: state.addNode,
+  setEdges: state.setEdges,
 });
 
-export { useStore, selector };
+export { selector, useStore };
