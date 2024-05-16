@@ -1,114 +1,105 @@
-import * as tf from "@tensorflow/tfjs";
-import Tensor from "../lib/tensor";
+//TODO: Do gradient testing in each op too
+import { describe, expect, jest, test } from '@jest/globals';
+import Tensor from "../lib/tensor.js";
+import * as tf from '@tensorflow/tfjs';
 
-function close(x, y, epsilon = 0.001) {
-  const difference = x.sub(y).abs();
-  return tf.max(difference).dataSync()[0] < epsilon;
+/*
+  * format of a case:
+  * {
+  * input: tf.tensor,
+  * output: tf.tensor,
+  * args: []
+  * }
+  */
+
+// SETUP
+
+function isNumClose(num1, num2, tolerance) {
+  return Math.abs(num1 - num2) <= tolerance;
 }
 
-function arrayEquals(a, b) {
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; ++i) if (a[i] != b[i]) return false;
+function areTensorsClose(tensor1, tensor2, tolerance = 1e-10) {
+  if (tensor1.length !== tensor2.length) {
+    return false;
+  }
+  for (let i = 0; i < tensor1.length; i++) {
+    if (Array.isArray(tensor1[i]) && Array.isArray(tensor2[i])) {
+      if (!areTensorsClose(tensor1[i], tensor2[i], tolerance)) {
+        return false;
+      }
+    } else if (!isNumClose(tensor1[i], tensor2[i], tolerance)) {
+      return false;
+    }
+  }
   return true;
 }
 
+function testUnaryOp(description, op, cases) {
+  describe(description, () => {
+    cases.forEach((c, i) => {
+      test("case #${i+1}", () => {
+        const tensor = new Tensor(c['input']);
+        const result = tensor[op]();
+        expect(result.shape).toEqual(c['output'].shape);
+        expect(result.data.data.arraySync()).toBeApproximatelyEqual(c['output'].arraySync());
+      });
+    });
+  });
+}
+
+function testLoadOp(description, opName, cases) {
+  describe(description, () => {
+    cases.forEach((c, i) => {
+      test(`case #${i + 1}`, () => {
+        const result = Tensor[opName](...c['input']);
+        expect(result.shape).toEqual(c.output.shape);
+        expect(result.data.data.arraySync()).toBeApproximatelyEqual(c['output'].data.data.arraySync());
+      });
+    });
+  });
+}
+
+function testBinaryOp(description, opName, cases) {
+  describe(description, () => {
+    cases.forEach((c, i) => {
+      test(`case #${i + 1}`, () => {
+        const tensor1 = new Tensor(c.input[0]);
+        const tensor2 = new Tensor(c.input[1]);
+        const result = tensor1[opName](tensor2);
+        expect(result.shape).toEqual(c.output.shape);
+        expect(result.data.data.arraySync()).toBeApproximatelyEqual(c.output.arraySync());
+      });
+    });
+  });
+}
+
 expect.extend({
-  toEqual(received, expected) {
-    let t = new Tensor(expected);
+  toBeApproximatelyEqual(array1, array2, precision = 1e-10) {
+    const compareArrays = (arr1, arr2, tol) => {
+      if (arr1.length !== arr2.length) return false;
+      for (let i = 0; i < arr1.length; i++) {
+        if (Array.isArray(arr1[i]) && Array.isArray(arr2[i])) {
+          if (!compareArrays(arr1[i], arr2[i], tol)) return false;
+        } else {
+          if (typeof arr1[i] === 'number' && typeof arr2[i] === 'number') {
+            if (Math.abs(arr1[i] - arr2[i]) > tol) return false;
+          } else {
+            if (arr1[i] !== arr2[i]) return false;
+          }
+        }
+      }
+      return true;
+    };
 
-    const shapeMsg = `Got shape ${received.shape}; expected shape ${t.shape}`;
-
-    if (!arrayEquals(t.shape, received.shape)) {
-      return {
-        message: () => shapeMsg,
-        pass: false,
-      };
-    }
-    if (close(received.data.data, expected)) {
-      return {
-        message: () => `tensors matched; ${shapeMsg}`,
-        pass: true,
-      };
-    } else {
-      return {
-        message: () => `expected tensors to be equal; ${shapeMsg}`,
-        pass: false,
-      };
-    }
-  },
+    const pass = compareArrays(array1, array2, precision);
+    return {
+      message: () =>
+        pass ?
+          `expected arrays not to be approximately equal within a tolerance of ${precision}, but they were` :
+          `expected arrays to be approximately equal within a tolerance of ${precision}, but they were not`,
+      pass: pass
+    };
+  }
 });
 
-describe("Basic Tensor Ops", () => {
-  let data1 = [
-    [1, 2],
-    [3, 4],
-    [5, 7],
-  ];
-  let t1 = new Tensor(data1, true);
-  let data2 = [
-    [1, 2],
-    [3, 4],
-    [5, 6],
-  ];
-  let t2 = new Tensor(data2, true);
-
-  test("add with tensor", () => {
-    expect(t1.add(t2)).toEqual(
-      data1.map((row, r) => row.map((x, c) => x + data2[r][c]))
-    );
-  });
-
-  test("add with number", () => {
-    expect(t1.add(5)).toEqual(data1.map((row) => row.map((x) => x + 5)));
-  });
-
-  test("sum", () => {
-    expect(t1.sum(undefined, true)).toEqual([
-      [data1.flat(Infinity).reduce((a, b) => a + b)],
-    ]);
-  });
-
-  test("max", () => {
-    expect(t1.max(undefined, true)).toEqual([
-      [Math.max(...data1.flat(Infinity))],
-    ]);
-  });
-
-  test("min", () => {
-    expect(t1.min(undefined, true)).toEqual([
-      [Math.min(...data1.flat(Infinity))],
-    ]);
-  });
-
-  test("tranpose with default axes", () => {
-    expect(t1.transpose()).toEqual(
-      data1[0].map((_, c) => data1.map((row) => row[c]))
-    );
-  });
-
-  test("sqrt", () => {
-    expect(t1.sqrt()).toEqual(data1.map((row) => row.map(Math.sqrt)));
-  });
-  test("transpose", () => {
-    const expected = [[1, 3, 5], [2, 4, 7]];
-    expect(t1.transpose()).toEqual(expected);
-  });
-  test("dot", () => {
-    const expected = [[5, 11, 17], [11, 25, 39], [19, 43, 67]]
-    let t2T = t2.transpose();
-    let out = t1.dot(t2T);
-    expect(out).toEqual(expected);
-  })
-
-  test("relu", () => {
-    expect(t1.relu()).toEqual(
-      data1.map((row) => row.map((e) => (e > 0 ? e : 0)))
-    );
-  });
-
-  test("backward", () => {
-    let out = t1.add(t2).sum(undefined, true);
-    out = out.backward()
-    expect(t1.grad).toEqual([[1, 1], [1, 1], [1, 1]]);
-  });
-});
+// TESTS
