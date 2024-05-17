@@ -37,7 +37,7 @@ function areTensorsClose(tensor1, tensor2, tolerance = 1e-10) {
 function testUnaryOp(description, op, cases) {
   describe(description, () => {
     cases.forEach((c, i) => {
-      test("case #${i+1}", () => {
+      test(`case #${i+1}`, () => {
         const tensor = new Tensor(c['input']);
         const result = tensor[op]();
         expect(result.shape).toEqual(c['output'].shape);
