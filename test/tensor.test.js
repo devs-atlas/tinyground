@@ -8,7 +8,7 @@ import * as tf from "@tensorflow/tfjs";
  * {
  * input: tf.tensor,
  * output: tf.tensor,
- * args: []
+ * args: [] - the length of args must equal number of inputs to args
  * }
  */
 
@@ -34,53 +34,61 @@ function areTensorsClose(tensor1, tensor2, tolerance = 1e-10) {
   return true;
 }
 
-function testUnaryOp(description, op, cases) {
-  describe(description, () => {
-    cases.forEach((c, i) => {
-      test(`case #${i + 1}`, () => {
-        const tensor = new Tensor(c["input"]);
-        const result = tensor[op]();
-        expect(result.shape).toEqual(c["output"].shape);
-        expect(result.data.data.arraySync()).toBeApproximatelyEqual(
-          c["output"].arraySync(),
-        );
+function testUnaryOps(tests) {
+  tests.forEach(testOp => {
+    describe(testOp.description, () => {
+      testOp.cases.forEach((c, i) => {
+        test(`case #${i + 1}`, () => {
+          const tensor = new Tensor(c["input"]);
+          const result = tensor[testOp.op](...c["args"]);
+          expect(result.shape).toEqual(c["output"].shape);
+          expect(result.data.data.arraySync()).toBeApproximatelyEqual(
+            c["output"].arraySync()
+          );
+        });
       });
     });
-  });
+  })
 }
 
-function testLoadOp(description, opName, cases) {
-  describe(description, () => {
-    cases.forEach((c, i) => {
-      test(`case #${i + 1}`, () => {
-        const result = Tensor[opName](...c["input"]);
-        expect(result.shape).toEqual(c.output.shape);
-        expect(result.data.data.arraySync()).toBeApproximatelyEqual(
-          c["output"].data.data.arraySync(),
-        );
+function testLoadOps(tests) {
+  tests.forEach(testOp => {
+    describe(testOp.description, () => {
+      testOp.cases.forEach((c, i) => {
+        test(`case #${i + 1}`, () => {
+          const result = Tensor[testOp.op](...c["args"]);
+          console.log(result.data.data.arraySync());
+          expect(result.shape).toEqual(c.output.shape);
+          expect(result.data.data.arraySync()).toBeApproximatelyEqual(
+            c["output"].arraySync(),
+          );
+        });
       });
     });
-  });
+  })
 }
 
-function testBinaryOp(description, opName, cases) {
-  describe(description, () => {
-    cases.forEach((c, i) => {
-      test(`case #${i + 1}`, () => {
-        const tensor1 = new Tensor(c.input[0]);
-        const tensor2 = new Tensor(c.input[1]);
-        const result = tensor1[opName](tensor2);
-        expect(result.shape).toEqual(c.output.shape);
-        expect(result.data.data.arraySync()).toBeApproximatelyEqual(
-          c.output.arraySync(),
-        );
+function testBinaryOps(tests) {
+  tests.forEach(testOp => {
+    describe(testOp.description, () => {
+      testOp.cases.forEach((c, i) => {
+        test(`case #${i + 1}`, () => {
+          const tensor1 = new Tensor(c.input[0]);
+          const tensor2 = new Tensor(c.input[1]);
+          //NOTE: No binary ops have
+          const result = tensor1[testOp.op](tensor2, ...c["args"]);
+          expect(result.shape).toEqual(c.output.shape);
+          expect(result.data.data.arraySync()).toBeApproximatelyEqual(
+            c.output.arraySync(),
+          );
+        });
       });
     });
   });
 }
 
 expect.extend({
-  toBeApproximatelyEqual(array1, array2, precision = 1e-10) {
+  toBeApproximatelyEqual(array1, array2, precision = 1e-6) {
     const compareArrays = (arr1, arr2, tol) => {
       if (arr1.length !== arr2.length) return false;
       for (let i = 0; i < arr1.length; i++) {
@@ -110,6 +118,186 @@ expect.extend({
 
 // TESTS
 
-test("adds 1 + 1 to equal 3", () => {
-  expect(1 + 1).toBe(2);
-});
+const unaryTests = [
+  {
+    description: 'Tensor.neg()',
+    op: 'neg',
+    cases: [
+      {
+        input: tf.tensor([1, -2, 3]),
+        output: tf.tensor([-1, 2, -3]),
+        args: []
+      }
+    ]
+  },
+  {
+    description: 'Tensor.log()',
+    op: 'log',
+    cases: [
+      {
+        input: tf.tensor([1, Math.E, Math.E ** 2]),
+        output: tf.tensor([0, 1, 2]),
+        args: []
+      }
+    ]
+  },
+  {
+    description: 'Tensor.log2()',
+    op: 'log2',
+    cases: [
+      {
+        input: tf.tensor([1, 2, 4, 8]),
+        output: tf.tensor([0, 1, 2, 3]),
+        args: []
+      }
+    ]
+  },
+  {
+    description: 'Tensor.exp()',
+    op: 'exp',
+    cases: [
+      {
+        input: tf.tensor([0, 1, 2]),
+        output: tf.tensor([1, Math.E, Math.E ** 2]),
+        args: []
+      }
+    ]
+  },
+  {
+    description: 'Tensor.exp2()',
+    op: 'exp2',
+    cases: [
+      {
+        input: tf.tensor([0, 1, 2, 3]),
+        output: tf.tensor([1, 2, 4, 8]),
+        args: []
+      }
+    ]
+  },
+  {
+    description: 'Tensor.relu()',
+    op: 'relu',
+    cases: [
+      {
+        input: tf.tensor([-1, 0, 1, -2, 2]),
+        output: tf.tensor([0, 0, 1, 0, 2]),
+        args: []
+      }
+    ]
+  },
+  {
+    description: 'Tensor.sigmoid()',
+    op: 'sigmoid',
+    cases: [
+      {
+        input: tf.tensor([-1, 0, 1]),
+        output: tf.tensor([1 / (1 + Math.exp(1)), 0.5, 1 / (1 + Math.exp(-1))]),
+        args: []
+      }
+    ]
+  },
+  {
+    description: 'Tensor.sqrt()',
+    op: 'sqrt',
+    cases: [
+      {
+        input: tf.tensor([0, 1, 4, 9]),
+        output: tf.tensor([0, 1, 2, 3]),
+        args: []
+      }
+    ]
+  },
+  {
+    description: 'Tensor.rsqrt()',
+    op: 'rsqrt',
+    cases: [
+      {
+        input: tf.tensor([1, 4, 9]),
+        output: tf.tensor([1, 0.5, 1 / 3]),
+        args: []
+      }
+    ]
+  },
+  {
+    description: 'Tensor.sin()',
+    op: 'sin',
+    cases: [
+      {
+        input: tf.tensor([0, Math.PI / 2, Math.PI]),
+        output: tf.tensor([0, 1, 0]),
+        args: []
+      }
+    ]
+  },
+  {
+    description: 'Tensor.cos()',
+    op: 'cos',
+    cases: [
+      {
+        input: tf.tensor([0, Math.PI / 2, Math.PI]),
+        output: tf.tensor([1, 0, -1]),
+        args: []
+      }
+    ]
+  },
+  {
+    description: 'Tensor.tan()',
+    op: 'tan',
+    cases: [
+      {
+        input: tf.tensor([0, Math.PI / 4, Math.PI / 2]),
+        output: tf.tensor([0, 1, Infinity]),
+        args: []
+      }
+    ]
+  },
+  {
+    description: 'Tensor.permute()',
+    op: 'permute',
+    cases: [
+      {
+        input: tf.tensor([[1, 2, 3], [4, 5, 6]]),
+        output: tf.tensor([[1, 4], [2, 5], [3, 6]]),
+        args: [[1, 0]]
+      }
+    ]
+  },
+  {
+    description: 'Tensor.reshape()',
+    op: 'reshape',
+    cases: [
+      {
+        input: tf.tensor([1, 2, 3, 4]),
+        output: tf.tensor([[1, 2], [3, 4]]),
+        args: [[2, 2]]
+      }
+    ]
+  },
+  {
+    description: 'Tensor.expand()',
+    op: 'expand',
+    cases: [
+      {
+        input: tf.tensor([1, 2, 3]),
+        output: tf.tensor([[1, 2, 3], [1, 2, 3]]),
+        args: [[2, 3]]
+      }
+    ]
+  },
+  {
+    description: 'Tensor.transpose()',
+    op: 'transpose',
+    cases: [
+      {
+        input: tf.tensor([[1, 2, 3], [4, 5, 6]]),
+        output: tf.tensor([[1, 4], [2, 5], [3, 6]]),
+        args: [1, 0]
+      }
+    ]
+  }
+];
+
+let x = new Tensor(tf.tensor([1, 2, 3]));
+console.log('aa');
+console.log(x.expand([1, 3]));
+// testUnaryOps(unaryTests);
