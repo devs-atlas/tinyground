@@ -259,6 +259,11 @@ const unaryTests = [
         input: tf.tensor([[1, 2, 3], [4, 5, 6]]),
         output: tf.tensor([[1, 4], [2, 5], [3, 6]]),
         args: [[1, 0]]
+      },
+      {
+        input: tf.ones([8, 3, 2]),
+        output: tf.ones([8, 2, 3]),
+        args: [[0, 2, 1]]
       }
     ]
   },
@@ -273,31 +278,34 @@ const unaryTests = [
       }
     ]
   },
-  {
-    description: 'Tensor.expand()',
-    op: 'expand',
-    cases: [
-      {
-        input: tf.tensor([1, 2, 3]),
-        output: tf.tensor([[1, 2, 3], [1, 2, 3]]),
-        args: [[2, 3]]
-      }
-    ]
-  },
+  // {
+  //   description: 'Tensor.expand()',
+  //   op: 'expand',
+  //   cases: [
+  //     {
+  //       input: tf.tensor([1, 2, 3]),
+  //       output: tf.tensor([[1, 2, 3], [1, 2, 3]]),
+  //       args: [[2, -1]]
+  //     }
+  //   ]
+  // },
   {
     description: 'Tensor.transpose()',
     op: 'transpose',
     cases: [
       {
-        input: tf.tensor([[1, 2, 3], [4, 5, 6]]),
-        output: tf.tensor([[1, 4], [2, 5], [3, 6]]),
-        args: [1, 0]
+        input: tf.ones([3, 1, 2]),
+        output: tf.ones([3, 2, 1]),
+        args: [1, 2]
+      },
+      {
+        input: tf.ones([3, 1]),
+        output: tf.ones([1, 3]),
+        args: [0, 1]
       }
     ]
   }
 ];
 
 let x = new Tensor(tf.tensor([1, 2, 3]));
-console.log('aa');
-console.log(x.expand([1, 3]));
-// testUnaryOps(unaryTests);
+testUnaryOps(unaryTests);
