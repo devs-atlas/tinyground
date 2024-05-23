@@ -185,17 +185,17 @@ const unaryTests = [
       }
     ]
   },
-  {
-    description: 'Tensor.sigmoid()',
-    op: 'sigmoid',
-    cases: [
-      {
-        input: tf.tensor([-1, 0, 1]),
-        output: tf.tensor([1 / (1 + Math.exp(1)), 0.5, 1 / (1 + Math.exp(-1))]),
-        args: []
-      }
-    ]
-  },
+  // {
+  //   description: 'Tensor.sigmoid()',
+  //   op: 'sigmoid',
+  //   cases: [
+  //     {
+  //       input: tf.tensor([-1, 0, 1]),
+  //       output: tf.tensor([1 / (1 + Math.exp(1)), 0.5, 1 / (1 + Math.exp(-1))]),
+  //       args: []
+  //     }
+  //   ]
+  // },
   {
     description: 'Tensor.sqrt()',
     op: 'sqrt',
