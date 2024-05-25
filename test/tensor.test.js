@@ -185,17 +185,17 @@ const unaryTests = [
       }
     ]
   },
-  // {
-  //   description: 'Tensor.sigmoid()',
-  //   op: 'sigmoid',
-  //   cases: [
-  //     {
-  //       input: tf.tensor([-1, 0, 1]),
-  //       output: tf.tensor([1 / (1 + Math.exp(1)), 0.5, 1 / (1 + Math.exp(-1))]),
-  //       args: []
-  //     }
-  //   ]
-  // },
+  {
+    description: 'Tensor.sigmoid()',
+    op: 'sigmoid',
+    cases: [
+      {
+        input: tf.tensor([-1, 0, 1]),
+        output: tf.tensor([1 / (1 + Math.exp(1)), 0.5, 1 / (1 + Math.exp(-1))]),
+        args: []
+      }
+    ]
+  },
   {
     description: 'Tensor.sqrt()',
     op: 'sqrt',
@@ -278,17 +278,17 @@ const unaryTests = [
       }
     ]
   },
-  // {
-  //   description: 'Tensor.expand()',
-  //   op: 'expand',
-  //   cases: [
-  //     {
-  //       input: tf.tensor([1, 2, 3]),
-  //       output: tf.tensor([[1, 2, 3], [1, 2, 3]]),
-  //       args: [[2, -1]]
-  //     }
-  //   ]
-  // },
+  {
+    description: 'Tensor.expand()',
+    op: 'expand',
+    cases: [
+      {
+        input: tf.tensor([1, 2, 3]),
+        output: tf.tensor([[1, 2, 3], [1, 2, 3]]),
+        args: [[2, -1]]
+      }
+    ]
+  },
   {
     description: 'Tensor.transpose()',
     op: 'transpose',
@@ -304,7 +304,7 @@ const unaryTests = [
         args: [0, 1]
       }
     ]
-  }
+  },
 ];
 
 let x = new Tensor(tf.tensor([1, 2, 3]));
