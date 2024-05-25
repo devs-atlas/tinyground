@@ -57,7 +57,6 @@ function testLoadOps(tests) {
       testOp.cases.forEach((c, i) => {
         test(`case #${i + 1}`, () => {
           const result = Tensor[testOp.op](...c["args"]);
-          console.log(result.data.data.arraySync());
           expect(result.shape).toEqual(c.output.shape);
           expect(result.data.data.arraySync()).toBeApproximatelyEqual(
             c["output"].arraySync(),
@@ -283,7 +282,7 @@ const unaryTests = [
     op: 'expand',
     cases: [
       {
-        input: tf.tensor([1, 2, 3]),
+        input: tf.tensor([[1, 2, 3]]),
         output: tf.tensor([[1, 2, 3], [1, 2, 3]]),
         args: [[2, -1]]
       }
