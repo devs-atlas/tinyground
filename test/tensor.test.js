@@ -34,6 +34,25 @@ function areTensorsClose(tensor1, tensor2, tolerance = 1e-10) {
   return true;
 }
 
+function testReduceOps(tests) {
+  tests.forEach(testOp => {
+    describe(testOp.description, () => {
+      testOp.cases.forEach((c, i) => {
+        test(`case #${i + 1}`, () => {
+
+          const tensor = new Tensor(c["input"]);
+          const result = tensor[testOp.op](...c["args"]);
+          console.log(`Input Tensor: ${tensor.data.data.arraySync()}`);
+          console.log(`Output Tensor: ${result.data.data.arraySync()}`);
+          expect(result.data.data.arraySync()).toBeApproximatelyEqual(
+            c["output"].arraySync()
+          );
+        });
+      })
+    });
+  });
+}
+
 function testUnaryOps(tests) {
   tests.forEach(testOp => {
     describe(testOp.description, () => {
@@ -282,10 +301,15 @@ const unaryTests = [
     op: 'expand',
     cases: [
       {
-        input: tf.tensor([[1, 2, 3]]),
-        output: tf.tensor([[1, 2, 3], [1, 2, 3]]),
-        args: [[2, -1]]
-      }
+        input: tf.ones([2, 1, 4]),
+        output: tf.ones([2, 3, 4]),
+        args: [[-1, 3, -1]]
+      },
+      {
+        input: tf.ones([2, 1, 4]),
+        output: tf.ones([2, 3, 4]),
+        args: [[2, 3, 4]]
+      },
     ]
   },
   {
@@ -306,5 +330,246 @@ const unaryTests = [
   },
 ];
 
-let x = new Tensor(tf.tensor([1, 2, 3]));
+const reduceTests = [
+  {
+    description: 'Tensor.sum()',
+    op: 'sum',
+    cases: [
+      {
+        input: tf.tensor([[1, 2], [3, 4]]),
+        output: tf.tensor(10),
+        args: []
+      },
+      {
+        input: tf.tensor([[1, 2], [3, 4]]),
+        output: tf.tensor([4, 6]),
+        args: [0]
+      },
+      {
+        input: tf.tensor([[1, 2], [3, 4]]),
+        output: tf.tensor([3, 7]),
+        args: [1]
+      },
+      {
+        input: tf.tensor([[1, 2], [3, 4]]),
+        output: tf.tensor([[4, 6]]),
+        args: [0, true]
+      }
+    ]
+  },
+  {
+    description: 'Tensor.max()',
+    op: 'max',
+    cases: [
+      {
+        input: tf.tensor([[1, 2], [3, 4]]),
+        output: tf.tensor(4),
+        args: []
+      },
+      {
+        input: tf.tensor([[1, 2], [3, 4]]),
+        output: tf.tensor([3, 4]),
+        args: [0]
+      },
+      {
+        input: tf.tensor([[1, 2], [3, 4]]),
+        output: tf.tensor([2, 4]),
+        args: [1]
+      },
+      {
+        input: tf.tensor([[1, 2], [3, 4]]),
+        output: tf.tensor([[3, 4]]),
+        args: [0, true]
+      }
+    ]
+  },
+  {
+    description: 'Tensor.min()',
+    op: 'min',
+    cases: [
+      {
+        input: tf.tensor([[1, 2], [3, 4]]),
+        output: tf.tensor(1),
+        args: []
+      },
+      {
+        input: tf.tensor([[1, 2], [3, 4]]),
+        output: tf.tensor([1, 2]),
+        args: [0]
+      },
+      {
+        input: tf.tensor([[1, 2], [3, 4]]),
+        output: tf.tensor([1, 3]),
+        args: [1]
+      },
+      {
+        input: tf.tensor([[1, 2], [3, 4]]),
+        output: tf.tensor([[1, 2]]),
+        args: [0, true]
+      }
+    ]
+  },
+];
+
+const binaryTests = [
+  {
+    description: 'Tensor.add()',
+    op: 'add',
+    cases: [
+      {
+        input: [tf.tensor([1, 2, 3]), tf.tensor([1, 1, 1])],
+        output: tf.tensor([2, 3, 4]),
+        args: []
+      },
+      {
+        input: [tf.tensor([1, 2, 3]), 1],  // Broadcasting a scalar
+        output: tf.tensor([2, 3, 4]),
+        args: []
+      },
+      {
+        input: [tf.tensor([[1, 2], [3, 4]]), tf.tensor([[1], [1]])],  // Broadcasting a column vector
+        output: tf.tensor([[2, 3], [4, 5]]),
+        args: []
+      },
+    ]
+  },
+  {
+    description: 'Tensor.sub()',
+    op: 'sub',
+    cases: [
+      {
+        input: [tf.tensor([3, 4, 5]), tf.tensor([1, 2, 3])],
+        output: tf.tensor([2, 2, 2]),
+        args: []
+      },
+      {
+        input: [tf.tensor([3, 4, 5]), 1],  // Broadcasting a scalar
+        output: tf.tensor([2, 3, 4]),
+        args: []
+      },
+      {
+        input: [tf.tensor([[3, 4], [5, 6]]), tf.tensor([[1], [1]])],  // Broadcasting a column vector
+        output: tf.tensor([[2, 3], [4, 5]]),
+        args: []
+      },
+    ]
+  },
+  {
+    description: 'Tensor.mul()',
+    op: 'mul',
+    cases: [
+      {
+        input: [tf.tensor([1, 2, 3]), tf.tensor([2, 2, 2])],
+        output: tf.tensor([2, 4, 6]),
+        args: []
+      },
+      {
+        input: [tf.tensor([1, 2, 3]), 2],  // Broadcasting a scalar
+        output: tf.tensor([2, 4, 6]),
+        args: []
+      },
+      {
+        input: [tf.tensor([[1, 2], [3, 4]]), tf.tensor([[2], [2]])],  // Broadcasting a column vector
+        output: tf.tensor([[2, 4], [6, 8]]),
+        args: []
+      },
+    ]
+  },
+  {
+    description: 'Tensor.div()',
+    op: 'div',
+    cases: [
+      {
+        input: [tf.tensor([4, 6, 8]), tf.tensor([2, 2, 2])],
+        output: tf.tensor([2, 3, 4]),
+        args: []
+      },
+      {
+        input: [tf.tensor([4, 6, 8]), 2],  // Broadcasting a scalar
+        output: tf.tensor([2, 3, 4]),
+        args: []
+      },
+      {
+        input: [tf.tensor([[4, 6], [8, 10]]), tf.tensor([[2], [2]])],  // Broadcasting a column vector
+        output: tf.tensor([[2, 3], [4, 5]]),
+        args: []
+      },
+    ]
+  },
+  {
+    description: 'Tensor.dot()',
+    op: 'dot',
+    cases: [
+      {
+        input: [tf.ones([3, 2]), tf.ones([2, 3])],
+        output: tf.fill([3, 3], 2),
+        args: []
+      },
+      {
+        input: [tf.ones([3, 2]), tf.ones([2])],
+        output: tf.fill([3], 2),
+        args: []
+      },
+      {
+        input: [tf.ones([3]), tf.ones([3, 2])],
+        output: tf.fill([2], 3),
+        args: []
+      },
+      {
+        input: [tf.ones([3]), tf.ones([3])],
+        output: tf.tensor(3),
+        args: []
+      },
+    ],
+  }
+];
+
+const loadOpTests = [
+  {
+    description: 'Tensor.ones()',
+    op: 'ones',
+    cases: [
+      {
+        args: [[2, 2], false],  // shape and requires_grad
+        output: tf.tensor([[1, 1], [1, 1]]),
+      },
+      {
+        args: [[3], true],  // testing with requires_grad
+        output: tf.tensor([1, 1, 1]),
+      }
+    ]
+  },
+  {
+    description: 'Tensor.zeros()',
+    op: 'zeros',
+    cases: [
+      {
+        args: [[2, 3], false],
+        output: tf.tensor([[0, 0, 0], [0, 0, 0]]),
+      },
+      {
+        args: [[1, 4], true],
+        output: tf.tensor([[0, 0, 0, 0]]),
+      }
+    ]
+  },
+  {
+    description: 'Tensor.full()',
+    op: 'full',
+    cases: [
+      {
+        args: [[2, 2], 7, false],  // shape, fill_value, requires_grad
+        output: tf.tensor([[7, 7], [7, 7]]),
+      },
+      {
+        args: [[1, 3], 3, true],
+        output: tf.tensor([[3, 3, 3]]),
+      }
+    ]
+  }
+];
+
 testUnaryOps(unaryTests);
+testBinaryOps(binaryTests);
+testLoadOps(loadOpTests);
+testReduceOps(reduceTests);
